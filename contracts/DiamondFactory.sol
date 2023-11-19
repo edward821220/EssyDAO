@@ -16,11 +16,22 @@ contract DiamondFactory is Ownable {
 
     fallback() external payable {}
 
-    function createDaoDiamond(string calldata name_) external returns (address) {
-        bytes32 _salt = keccak256(abi.encodePacked(name_, msg.sender));
-        DiamondCutFacet diamondCutFacet = new DiamondCutFacet();
-        Diamond diamond = new Diamond{salt: _salt}(msg.sender, address(diamondCutFacet));
+    function createDAODiamond(
+        string calldata DAOName,
+        string memory _tokenName,
+        string memory _tokenSymbol,
+        address _diamondCutFacet,
+        address _diamondLoupeFacet,
+        address _basicDaoFacet,
+        address _basicDaoInit
+    ) external returns (address) {
+        bytes32 _salt = keccak256(abi.encodePacked(DAOName, msg.sender));
+
+        Diamond diamond =
+        new Diamond{salt: _salt}(msg.sender, _tokenName, _tokenSymbol, _diamondCutFacet, _diamondLoupeFacet, _basicDaoFacet, _basicDaoInit);
+
         emit DAOCreated(address(diamond), msg.sender);
+
         return address(diamond);
     }
 
