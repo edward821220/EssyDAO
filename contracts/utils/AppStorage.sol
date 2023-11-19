@@ -22,6 +22,11 @@ struct Proposal {
 }
 
 struct AppStorage {
+    string name;
+    string symbol;
+    uint256 totalSupply;
+    mapping(address account => uint256) balances;
+    mapping(address account => mapping(address spender => uint256)) allowances;
     mapping(bytes32 => Proposal) proposals;
     mapping(address => mapping(bytes32 => bool)) isVoted;
 }
