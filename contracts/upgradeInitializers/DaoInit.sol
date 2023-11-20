@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import {AppStorage} from "../utils/AppStorage.sol";
 
-contract BasicDaoInit {
+contract DaoInit {
     AppStorage internal s;
 
     function init(string calldata name, string calldata symbol) external {

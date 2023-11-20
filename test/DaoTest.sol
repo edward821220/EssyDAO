@@ -3,17 +3,17 @@ pragma solidity ^0.8.0;
 
 import {Test, console2} from "forge-std/Test.sol";
 import {DiamondFactory} from "../contracts/DiamondFactory.sol";
-import {BasicDaoFacet} from "../contracts/facets/BasicDaoFacet.sol";
-import {BasicDaoInit} from "../contracts/upgradeInitializers/BaicDaoInit.sol";
+import {DaoFacet} from "../contracts/facets/DaoFacet.sol";
+import {DaoInit} from "../contracts/upgradeInitializers/DaoInit.sol";
 import {DiamondCutFacet} from "../contracts/facets/DiamondCutFacet.sol";
 import {DiamondLoupeFacet} from "../contracts/facets/DiamondLoupeFacet.sol";
 
-contract BasicDaoTest is Test {
+contract DaoTest is Test {
     DiamondFactory public factory;
     DiamondCutFacet public diamondCutFacet;
     DiamondLoupeFacet public diamondLoupeFacet;
-    BasicDaoFacet public basicDaoFacet;
-    BasicDaoInit public basicDaoInit;
+    DaoFacet public daoFacet;
+    DaoInit public daoInit;
 
     address admin = makeAddr("Admin");
     address founder = makeAddr("Founder");
@@ -23,8 +23,8 @@ contract BasicDaoTest is Test {
         factory = new DiamondFactory(admin);
         diamondCutFacet = new DiamondCutFacet();
         diamondLoupeFacet = new DiamondLoupeFacet();
-        basicDaoFacet = new BasicDaoFacet();
-        basicDaoInit = new BasicDaoInit();
+        daoFacet = new DaoFacet();
+        daoInit = new DaoInit();
         vm.stopPrank();
     }
 
@@ -36,12 +36,12 @@ contract BasicDaoTest is Test {
             "GOV",
             address(diamondCutFacet),
             address(diamondLoupeFacet),
-            address(basicDaoFacet),
-            address(basicDaoInit)
+            address(daoFacet),
+            address(daoInit)
         );
-        BasicDaoFacet basicDao = BasicDaoFacet(diamond);
-        assertEq(basicDao.name(), "Goverence Token");
-        assertEq(basicDao.symbol(), "GOV");
+        DaoFacet dao = DaoFacet(diamond);
+        assertEq(dao.name(), "Goverence Token");
+        assertEq(dao.symbol(), "GOV");
         vm.stopPrank();
     }
 }

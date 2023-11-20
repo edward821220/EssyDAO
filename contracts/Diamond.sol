@@ -8,8 +8,8 @@ import {IDiamondCut} from "./interfaces/IDiamondCut.sol";
 import {DiamondCutFacet} from "./facets/DiamondCutFacet.sol";
 import {IDiamondLoupe} from "./interfaces/IDiamondLoupe.sol";
 import {DiamondLoupeFacet} from "./facets/DiamondLoupeFacet.sol";
-import {BasicDaoFacet} from "./facets/BasicDaoFacet.sol";
-import {BasicDaoInit} from "./upgradeInitializers/BaicDaoInit.sol";
+import {DaoFacet} from "./facets/DaoFacet.sol";
+import {DaoInit} from "./upgradeInitializers/DaoInit.sol";
 
 contract Diamond {
     constructor(
@@ -18,8 +18,8 @@ contract Diamond {
         string memory _tokenSymbol,
         address _diamondCutFacet,
         address _diamondLoupeFacet,
-        address _basicDaoFacet,
-        address _basicDaoInit
+        address _daoFacet,
+        address _daoInit
     ) payable {
         LibDiamond.setContractOwner(_contractOwner);
 
@@ -47,35 +47,35 @@ contract Diamond {
             functionSelectors: diamondLoupeSelectors
         });
 
-        // BasicDaoFacet
-        bytes4[] memory basicDaoSelectors = new bytes4[](11);
-        basicDaoSelectors[0] = BasicDaoFacet.createProposal.selector;
-        basicDaoSelectors[1] = BasicDaoFacet.vote.selector;
-        basicDaoSelectors[2] = BasicDaoFacet.name.selector;
-        basicDaoSelectors[3] = BasicDaoFacet.symbol.selector;
-        basicDaoSelectors[4] = BasicDaoFacet.decimals.selector;
-        basicDaoSelectors[5] = BasicDaoFacet.totalSupply.selector;
-        basicDaoSelectors[6] = BasicDaoFacet.balanceOf.selector;
-        basicDaoSelectors[7] = BasicDaoFacet.allowance.selector;
-        basicDaoSelectors[8] = BasicDaoFacet.transfer.selector;
-        basicDaoSelectors[9] = BasicDaoFacet.approve.selector;
-        basicDaoSelectors[10] = BasicDaoFacet.transferFrom.selector;
+        // DaoFacet
+        bytes4[] memory daoSelectors = new bytes4[](11);
+        daoSelectors[0] = DaoFacet.createProposal.selector;
+        daoSelectors[1] = DaoFacet.vote.selector;
+        daoSelectors[2] = DaoFacet.name.selector;
+        daoSelectors[3] = DaoFacet.symbol.selector;
+        daoSelectors[4] = DaoFacet.decimals.selector;
+        daoSelectors[5] = DaoFacet.totalSupply.selector;
+        daoSelectors[6] = DaoFacet.balanceOf.selector;
+        daoSelectors[7] = DaoFacet.allowance.selector;
+        daoSelectors[8] = DaoFacet.transfer.selector;
+        daoSelectors[9] = DaoFacet.approve.selector;
+        daoSelectors[10] = DaoFacet.transferFrom.selector;
 
         cut[2] = IDiamondCut.FacetCut({
-            facetAddress: _basicDaoFacet,
+            facetAddress: _daoFacet,
             action: IDiamondCut.FacetCutAction.Add,
-            functionSelectors: basicDaoSelectors
+            functionSelectors: daoSelectors
         });
 
-        LibDiamond.diamondCut(
-            cut, _basicDaoInit, abi.encodeWithSignature("init(string,string)", _tokenName, _tokenSymbol)
-        );
+        LibDiamond.diamondCut(cut, _daoInit, abi.encodeWithSignature("init(string,string)", _tokenName, _tokenSymbol));
 
         LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
         ds.supportedInterfaces[type(IDiamondCut).interfaceId] = true;
         ds.supportedInterfaces[type(IDiamondLoupe).interfaceId] = true;
         ds.supportedInterfaces[type(IERC165).interfaceId] = true;
         ds.supportedInterfaces[type(IERC173).interfaceId] = true;
+
+        LibDiamond.setContractOwner(address(0));
     }
 
     receive() external payable {}
