@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import {Diamond} from "../contracts/Diamond.sol";
 import {DiamondCutFacet} from "../contracts/facets/DiamondCutFacet.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {FounderInfo} from "./utils/AppStorage.sol";
 
 contract DiamondFactory is Ownable {
     address[] public DAOs;
@@ -17,18 +18,19 @@ contract DiamondFactory is Ownable {
     fallback() external payable {}
 
     function createDAODiamond(
-        string calldata DAOName,
-        string memory _tokenName,
-        string memory _tokenSymbol,
-        address _diamondCutFacet,
-        address _diamondLoupeFacet,
-        address _daoFacet,
-        address _daoInit
+        string calldata daoName,
+        FounderInfo[] calldata foundersInfo,
+        string calldata tokenName,
+        string calldata tokenSymbol,
+        address diamondCutFacet,
+        address diamondLoupeFacet,
+        address daoFacet,
+        address daoInit
     ) external returns (address) {
-        bytes32 _salt = keccak256(abi.encodePacked(DAOName, msg.sender));
+        bytes32 _salt = keccak256(abi.encodePacked(daoName, msg.sender));
 
         Diamond diamond =
-        new Diamond{salt: _salt}(msg.sender, _tokenName, _tokenSymbol, _diamondCutFacet, _diamondLoupeFacet, _daoFacet, _daoInit);
+        new Diamond{salt: _salt}(msg.sender,foundersInfo, tokenName, tokenSymbol, diamondCutFacet, diamondLoupeFacet, daoFacet, daoInit);
 
         emit DAOCreated(address(diamond), msg.sender);
 

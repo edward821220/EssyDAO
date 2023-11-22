@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import {IERC165} from "@openzeppelin/contracts/interfaces/IERC165.sol";
 import {IERC173} from "./interfaces/IERC173.sol";
 import {LibDiamond} from "./utils/LibDiamond.sol";
+import {FounderInfo} from "./utils/AppStorage.sol";
 import {IDiamondCut} from "./interfaces/IDiamondCut.sol";
 import {DiamondCutFacet} from "./facets/DiamondCutFacet.sol";
 import {IDiamondLoupe} from "./interfaces/IDiamondLoupe.sol";
@@ -13,15 +14,16 @@ import {DaoInit} from "./upgradeInitializers/DaoInit.sol";
 
 contract Diamond {
     constructor(
-        address _contractOwner,
-        string memory _tokenName,
-        string memory _tokenSymbol,
-        address _diamondCutFacet,
-        address _diamondLoupeFacet,
-        address _daoFacet,
-        address _daoInit
+        address contractOwner,
+        FounderInfo[] memory foundersInfo,
+        string memory tokenName,
+        string memory tokenSymbol,
+        address diamondCutFacet,
+        address diamondLoupeFacet,
+        address daoFacet,
+        address daoInit
     ) payable {
-        LibDiamond.setContractOwner(_contractOwner);
+        LibDiamond.setContractOwner(contractOwner);
 
         IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](3);
 
@@ -29,7 +31,7 @@ contract Diamond {
         bytes4[] memory diamondCutSelectors = new bytes4[](1);
         diamondCutSelectors[0] = IDiamondCut.diamondCut.selector;
         cut[0] = IDiamondCut.FacetCut({
-            facetAddress: _diamondCutFacet,
+            facetAddress: diamondCutFacet,
             action: IDiamondCut.FacetCutAction.Add,
             functionSelectors: diamondCutSelectors
         });
@@ -42,7 +44,7 @@ contract Diamond {
         diamondLoupeSelectors[3] = IDiamondLoupe.facetAddress.selector;
 
         cut[1] = IDiamondCut.FacetCut({
-            facetAddress: _diamondLoupeFacet,
+            facetAddress: diamondLoupeFacet,
             action: IDiamondCut.FacetCutAction.Add,
             functionSelectors: diamondLoupeSelectors
         });
@@ -62,12 +64,16 @@ contract Diamond {
         daoSelectors[10] = DaoFacet.transferFrom.selector;
 
         cut[2] = IDiamondCut.FacetCut({
-            facetAddress: _daoFacet,
+            facetAddress: daoFacet,
             action: IDiamondCut.FacetCutAction.Add,
             functionSelectors: daoSelectors
         });
 
-        LibDiamond.diamondCut(cut, _daoInit, abi.encodeWithSignature("init(string,string)", _tokenName, _tokenSymbol));
+        LibDiamond.diamondCut(
+            cut,
+            daoInit,
+            abi.encodeWithSignature("init(string,string,(address,uint256)[])", tokenName, tokenSymbol, foundersInfo)
+        );
 
         LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
         ds.supportedInterfaces[type(IDiamondCut).interfaceId] = true;

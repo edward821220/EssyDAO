@@ -22,6 +22,11 @@ struct Proposal {
     Status status;
 }
 
+struct FounderInfo {
+    address founder;
+    uint256 shares;
+}
+
 struct AppStorage {
     address diamond;
     string name;
