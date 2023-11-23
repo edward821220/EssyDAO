@@ -9,12 +9,12 @@ import {AppStorage, Side, Proposal, Status} from "../utils/AppStorage.sol";
 contract DaoFacet is IERC20, IERC20Metadata, IERC20Errors {
     AppStorage internal s;
 
-    uint256 constant CREATE_PROPOSAL_MIN_SHARES = 100 * 10 ** 18;
+    uint256 constant CREATE_PROPOSAL_MIN_SHARES = 100e18;
     uint256 constant VOTING_PERIOD = 7 days;
 
-    function createProposal(bytes calldata data_) external {
+    function createProposal(bytes calldata data_) external returns (uint256 proposalId) {
         require(balanceOf(msg.sender) >= CREATE_PROPOSAL_MIN_SHARES, "No enough shares");
-        uint256 proposalId = ++s.proposalCount;
+        proposalId = ++s.proposalCount;
         s.proposals[proposalId] = Proposal({
             id: proposalId,
             author: msg.sender,
@@ -52,6 +52,14 @@ contract DaoFacet is IERC20, IERC20Metadata, IERC20Errors {
                 proposal.status = Status.Rejected;
             }
         }
+    }
+
+    function checkIsVoted(uint256 proposalId) external view returns (bool) {
+        return s.isVoted[msg.sender][proposalId];
+    }
+
+    function checkProposal(uint256 proposalId) external view returns (Proposal memory) {
+        return s.proposals[proposalId];
     }
 
     function name() public view returns (string memory) {
