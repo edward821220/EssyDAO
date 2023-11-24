@@ -27,10 +27,10 @@ contract DiamondFactory is Ownable {
         address daoFacet,
         address daoInit
     ) external returns (address) {
-        bytes32 _salt = keccak256(abi.encodePacked(daoName, msg.sender));
+        bytes32 salt_ = keccak256(abi.encodePacked(daoName, msg.sender));
 
         Diamond diamond =
-        new Diamond{salt: _salt}(msg.sender,foundersInfo, tokenName, tokenSymbol, diamondCutFacet, diamondLoupeFacet, daoFacet, daoInit);
+        new Diamond{salt: salt_}(msg.sender,foundersInfo, tokenName, tokenSymbol, diamondCutFacet, diamondLoupeFacet, daoFacet, daoInit);
 
         DAOs.push(address(diamond));
         emit DAOCreated(address(diamond), msg.sender);

@@ -19,11 +19,10 @@ contract DiamondCutTest is BasicSetup {
     }
 
     function testCreateProposal() public {
-        vm.startPrank(founder1);
-
         address daoDiamond = _createDAO();
         DaoFacet dao = DaoFacet(daoDiamond);
 
+        vm.startPrank(founderA);
         IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](1);
 
         bytes4[] memory ownershipCutSelectors = new bytes4[](2);
@@ -42,7 +41,7 @@ contract DiamondCutTest is BasicSetup {
                 ++s.proposalCount,
                 cut,
                 address(ownershipInit),
-                abi.encodeWithSignature("init(address)", founder2)
+                abi.encodeWithSignature("init(address)", founderB)
             )
         );
 
@@ -50,14 +49,14 @@ contract DiamondCutTest is BasicSetup {
 
         assertEq(proposalId, 1);
         assertEq(proposal.id, proposalId);
-        assertEq(proposal.author, founder1);
+        assertEq(proposal.author, founderA);
         assertEq(uint256(proposal.status), uint256(Status.Pending));
 
         vm.stopPrank();
     }
 
     // function testExecuteProposal() public {
-    //     vm.startPrank(founder1);
+    //     vm.startPrank(founderA);
     //     address diamond = factory.createDAODiamond(
     //         "EasyDAO",
     //         foundersInfo,
@@ -86,20 +85,20 @@ contract DiamondCutTest is BasicSetup {
     //             ++s.proposalCount,
     //             cut,
     //             address(ownershipInit),
-    //             abi.encodeWithSignature("init(address)", founder2)
+    //             abi.encodeWithSignature("init(address)", founderB)
     //         )
     //     );
     //     dao.vote(proposalId, Side.Yes);
     //     assertEq(dao.checkIsVoted(proposalId), true);
     //     vm.stopPrank();
 
-    //     vm.startPrank(founder2);
+    //     vm.startPrank(founderB);
     //     dao.vote(proposalId, Side.Yes);
     //     assertEq(dao.checkIsVoted(proposalId), true);
     //     assertEq(uint256(dao.checkProposal(proposalId).status), 1);
     //     dao.executeProposal(proposalId);
     //     OwnershipFacet upgradedDao = OwnershipFacet(diamond);
-    //     assertEq(upgradedDao.owner(), founder2);
+    //     assertEq(upgradedDao.owner(), founderB);
     //     vm.stopPrank();
     // }
 }

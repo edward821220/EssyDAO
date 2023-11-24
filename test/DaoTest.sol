@@ -21,12 +21,12 @@ contract DaoTest is BasicSetup {
         dao.createProposal(new bytes(0));
         vm.stopPrank();
 
-        vm.startPrank(founder1);
+        vm.startPrank(founderA);
         uint256 proposalId = dao.createProposal(new bytes(0));
         Proposal memory proposal = dao.checkProposal(proposalId);
         assertEq(proposalId, 1);
         assertEq(proposal.id, proposalId);
-        assertEq(proposal.author, founder1);
+        assertEq(proposal.author, founderA);
         assertEq(uint256(proposal.status), uint256(Status.Pending));
         vm.stopPrank();
     }
@@ -35,7 +35,7 @@ contract DaoTest is BasicSetup {
         address daoDiamond = _createDAO();
         DaoFacet dao = DaoFacet(daoDiamond);
 
-        vm.startPrank(founder1);
+        vm.startPrank(founderA);
         uint256 proposalId = dao.createProposal(new bytes(0));
         dao.vote(proposalId, Side.Yes);
         vm.expectRevert("Already voted");
@@ -43,7 +43,7 @@ contract DaoTest is BasicSetup {
         assertEq(dao.checkIsVoted(proposalId), true);
         vm.stopPrank();
 
-        vm.startPrank(founder2);
+        vm.startPrank(founderB);
         dao.vote(proposalId, Side.No);
         assertEq(dao.checkIsVoted(proposalId), true);
         vm.stopPrank();
@@ -53,14 +53,14 @@ contract DaoTest is BasicSetup {
         dao.vote(proposalId, Side.Yes);
         vm.stopPrank();
 
-        vm.startPrank(founder3);
+        vm.startPrank(founderC);
         dao.vote(proposalId, Side.Yes);
         assertEq(dao.checkIsVoted(proposalId), true);
         vm.stopPrank();
 
         Proposal memory proposal = dao.checkProposal(proposalId);
-        assertEq(proposal.votesYes, dao.balanceOf(founder1) + dao.balanceOf(founder3));
-        assertEq(proposal.votesNo, dao.balanceOf(founder2));
+        assertEq(proposal.votesYes, dao.balanceOf(founderA) + dao.balanceOf(founderC));
+        assertEq(proposal.votesNo, dao.balanceOf(founderB));
         assertEq(uint256(proposal.status), uint256(Status.Approved));
 
         vm.startPrank(bob);
@@ -73,10 +73,10 @@ contract DaoTest is BasicSetup {
 
     // function testExecuteProposal() public {
     //  Receiver[] memory receivers = new Receiver[](2);
-    // receivers[0] = Receiver(founder1, 300 ether);
+    // receivers[0] = Receiver(founderA, 300 ether);
     // receivers[0] = Receiver(alice, 100 ether);
     // receivers[0] = Receiver(bob, 100 ether);
-    //     vm.startPrank(founder1);
+    //     vm.startPrank(founderA);
     //     address diamond = factory.createDAODiamond(
     //         "EasyDAO",
     //         foundersInfo,
@@ -105,20 +105,20 @@ contract DaoTest is BasicSetup {
     //             ++s.proposalCount,
     //             cut,
     //             address(ownershipInit),
-    //             abi.encodeWithSignature("init(address)", founder2)
+    //             abi.encodeWithSignature("init(address)", founderB)
     //         )
     //     );
     //     dao.vote(proposalId, Side.Yes);
     //     assertEq(dao.checkIsVoted(proposalId), true);
     //     vm.stopPrank();
 
-    //     vm.startPrank(founder2);
+    //     vm.startPrank(founderB);
     //     dao.vote(proposalId, Side.Yes);
     //     assertEq(dao.checkIsVoted(proposalId), true);
     //     assertEq(uint256(dao.checkProposal(proposalId).status), 1);
     //     dao.executeProposal(proposalId);
     //     OwnershipFacet upgradedDao = OwnershipFacet(diamond);
-    //     assertEq(upgradedDao.owner(), founder2);
+    //     assertEq(upgradedDao.owner(), founderB);
     //     vm.stopPrank();
     // }
 }

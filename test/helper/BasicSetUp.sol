@@ -23,15 +23,14 @@ contract BasicSetup is Test {
     FounderInfo[] internal foundersInfo;
 
     address admin = makeAddr("Admin");
-    address founder1 = makeAddr("Founder1");
-    address founder2 = makeAddr("Founder2");
-    address founder3 = makeAddr("Founder3");
+    address founderA = makeAddr("FounderA");
+    address founderB = makeAddr("FounderB");
+    address founderC = makeAddr("FounderC");
     address alice = makeAddr("Alice");
     address bob = makeAddr("Bob");
 
     function setUp() public virtual {
         vm.startPrank(admin);
-
         factory = new DiamondFactory(admin);
         diamondCutFacet = new DiamondCutFacet();
         diamondLoupeFacet = new DiamondLoupeFacet();
@@ -39,15 +38,15 @@ contract BasicSetup is Test {
         daoInit = new DaoInit();
         ownershipFacet = new OwnershipFacet();
         ownershipInit = new OwnershipInit();
-
         vm.stopPrank();
 
-        foundersInfo.push(FounderInfo(founder1, 500 ether));
-        foundersInfo.push(FounderInfo(founder2, 200 ether));
-        foundersInfo.push(FounderInfo(founder3, 300 ether));
+        foundersInfo.push(FounderInfo(founderA, 500 ether));
+        foundersInfo.push(FounderInfo(founderB, 200 ether));
+        foundersInfo.push(FounderInfo(founderC, 300 ether));
     }
 
     function _createDAO() internal returns (address daoDiamond) {
+        vm.startPrank(founderA);
         daoDiamond = factory.createDAODiamond(
             "EasyDAO",
             foundersInfo,
@@ -58,5 +57,6 @@ contract BasicSetup is Test {
             address(daoFacet),
             address(daoInit)
         );
+        vm.stopPrank();
     }
 }
