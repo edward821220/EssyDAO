@@ -26,6 +26,8 @@ contract BasicSetup is Test {
     address founder1 = makeAddr("Founder1");
     address founder2 = makeAddr("Founder2");
     address founder3 = makeAddr("Founder3");
+    address alice = makeAddr("Alice");
+    address bob = makeAddr("Bob");
 
     function setUp() public virtual {
         vm.startPrank(admin);

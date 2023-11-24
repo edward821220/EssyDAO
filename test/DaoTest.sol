@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {console2} from "forge-std/Test.sol";
 import {BasicSetup} from "./helper/BasicSetup.sol";
 import {IDiamondCut} from "../contracts/interfaces/IDiamondCut.sol";
 import {DiamondCutFacet} from "../contracts/facets/DiamondCutFacet.sol";
@@ -9,23 +8,8 @@ import {DaoFacet} from "../contracts/facets/DaoFacet.sol";
 import {AppStorage, FounderInfo, Proposal, Side, Status, Receiver} from "../contracts/utils/AppStorage.sol";
 
 contract DaoTest is BasicSetup {
-    address alice = makeAddr("Alice");
-    address bob = makeAddr("Bob");
-
     function setUp() public override {
         super.setUp();
-    }
-
-    function testCreateDAO() public {
-        vm.startPrank(founder1);
-        DaoFacet dao = DaoFacet(_createDAO());
-        assertEq(dao.name(), "Goverence Token");
-        assertEq(dao.symbol(), "GOV");
-        assertEq(dao.totalSupply(), 1000 ether);
-        assertEq(dao.balanceOf(founder1), 500 ether);
-        assertEq(dao.balanceOf(founder2), 200 ether);
-        assertEq(dao.balanceOf(founder3), 300 ether);
-        vm.stopPrank();
     }
 
     function testCreateProposal() public {

@@ -32,9 +32,13 @@ contract DiamondFactory is Ownable {
         Diamond diamond =
         new Diamond{salt: _salt}(msg.sender,foundersInfo, tokenName, tokenSymbol, diamondCutFacet, diamondLoupeFacet, daoFacet, daoInit);
 
+        DAOs.push(address(diamond));
         emit DAOCreated(address(diamond), msg.sender);
-
         return address(diamond);
+    }
+
+    function getDAO(uint256 index) external view returns (address) {
+        return DAOs[index];
     }
 
     function withdraw() external onlyOwner {
