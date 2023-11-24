@@ -56,7 +56,7 @@ contract Diamond {
 
         {
             // DaoFacet
-            bytes4[] memory daoSelectors = new bytes4[](14);
+            bytes4[] memory daoSelectors = new bytes4[](15);
             daoSelectors[0] = DaoFacet.createProposal.selector;
             daoSelectors[1] = DaoFacet.vote.selector;
             daoSelectors[2] = DaoFacet.name.selector;
@@ -71,6 +71,7 @@ contract Diamond {
             daoSelectors[11] = DaoFacet.checkIsVoted.selector;
             daoSelectors[12] = DaoFacet.checkProposal.selector;
             daoSelectors[13] = DaoFacet.executeProposal.selector;
+            daoSelectors[14] = DaoFacet.mintByProposal.selector;
 
             cut[2] = IDiamondCut.FacetCut({
                 facetAddress: daoFacet,
@@ -90,15 +91,17 @@ contract Diamond {
                 )
             );
         }
+
         {
+            // Initialize Diamond Storage
             LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
             ds.supportedInterfaces[type(IDiamondCut).interfaceId] = true;
             ds.supportedInterfaces[type(IDiamondLoupe).interfaceId] = true;
             ds.supportedInterfaces[type(IERC165).interfaceId] = true;
             ds.supportedInterfaces[type(IERC173).interfaceId] = true;
-
-            LibDiamond.setContractOwner(address(0));
         }
+
+        LibDiamond.setContractOwner(address(0));
     }
 
     receive() external payable {}

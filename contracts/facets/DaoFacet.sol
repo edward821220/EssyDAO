@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {IERC20Errors} from "@openzeppelin/contracts/interfaces/draft-IERC6093.sol";
-import {AppStorage, Side, Proposal, Status} from "../utils/AppStorage.sol";
+import {AppStorage, Side, Proposal, Status, Receiver} from "../utils/AppStorage.sol";
 
 contract DaoFacet is IERC20, IERC20Metadata, IERC20Errors {
     AppStorage internal s;
@@ -13,7 +13,7 @@ contract DaoFacet is IERC20, IERC20Metadata, IERC20Errors {
     uint256 constant VOTING_PERIOD = 7 days;
 
     function createProposal(bytes calldata data_) external returns (uint256 proposalId) {
-        require(balanceOf(msg.sender) >= CREATE_PROPOSAL_MIN_SHARES, "No enough shares");
+        require(balanceOf(msg.sender) >= CREATE_PROPOSAL_MIN_SHARES, "No enough shares to create proposal");
         proposalId = ++s.proposalCount;
         s.proposals[proposalId] = Proposal({
             id: proposalId,
@@ -27,21 +27,22 @@ contract DaoFacet is IERC20, IERC20Metadata, IERC20Errors {
     }
 
     function executeProposal(uint256 proposalId_) external {
-        Proposal memory proposal = s.proposals[proposalId_];
+        Proposal storage proposal = s.proposals[proposalId_];
         require(proposal.status == Status.Approved, "Proposal is not approved");
         require(proposal.data.length > 0, "No data to execute");
         (bool success,) = s.diamond.call(proposal.data);
         require(success, "Failed to execute");
+        proposal.status = Status.Finished;
     }
 
-    function vote(uint256 proposalId, Side side_) external {
+    function vote(uint256 proposalId, Side side) external {
+        require(balanceOf(msg.sender) > 0, "You are not the member of the DAO");
         require(s.isVoted[msg.sender][proposalId] == false, "Already voted");
-        require(s.proposals[proposalId].status == Status.Pending, "Proposal is not pending");
-        require(block.timestamp - s.proposals[proposalId].createdAt <= VOTING_PERIOD, "Voting period is over");
+        require(block.timestamp - s.proposals[proposalId].createdAt < VOTING_PERIOD, "Voting period is over");
 
         s.isVoted[msg.sender][proposalId] = true;
         Proposal storage proposal = s.proposals[proposalId];
-        if (side_ == Side.Yes) {
+        if (side == Side.Yes) {
             proposal.votesYes += balanceOf(msg.sender);
             if (proposal.votesYes * 100 / totalSupply() > 50) {
                 proposal.status = Status.Approved;
@@ -60,6 +61,12 @@ contract DaoFacet is IERC20, IERC20Metadata, IERC20Errors {
 
     function checkProposal(uint256 proposalId) external view returns (Proposal memory) {
         return s.proposals[proposalId];
+    }
+
+    function mintByProposal(Receiver[] calldata reveivers) external {
+        for (uint256 i = 0; i < reveivers.length; ++i) {
+            _mint(reveivers[i].receiver, reveivers[i].amount);
+        }
     }
 
     function name() public view returns (string memory) {

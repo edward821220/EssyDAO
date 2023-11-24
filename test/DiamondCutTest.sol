@@ -3,95 +3,60 @@ pragma solidity ^0.8.0;
 
 import {console2} from "forge-std/Test.sol";
 import {BasicSetup} from "./helper/BasicSetup.sol";
+import {DiamondFactory} from "../contracts/DiamondFactory.sol";
 import {IDiamondCut} from "../contracts/interfaces/IDiamondCut.sol";
 import {DiamondCutFacet} from "../contracts/facets/DiamondCutFacet.sol";
+import {DiamondLoupeFacet} from "../contracts/facets/DiamondLoupeFacet.sol";
 import {DaoFacet} from "../contracts/facets/DaoFacet.sol";
-import {AppStorage, FounderInfo, Proposal, Side, Status, Receiver} from "../contracts/utils/AppStorage.sol";
+import {DaoInit} from "../contracts/upgradeInitializers/DaoInit.sol";
+import {OwnershipFacet} from "../contracts/facets/optional/OwnershipFacet.sol";
+import {OwnershipInit} from "../contracts/upgradeInitializers/OwnershipInit.sol";
+import {AppStorage, FounderInfo, Proposal, Side, Status} from "../contracts/utils/AppStorage.sol";
 
-contract DaoTest is BasicSetup {
-    address alice = makeAddr("Alice");
-    address bob = makeAddr("Bob");
-
+contract DiamondCutTest is BasicSetup {
     function setUp() public override {
         super.setUp();
     }
 
-    function testCreateDAO() public {
-        vm.startPrank(founder1);
-        DaoFacet dao = DaoFacet(_createDAO());
-        assertEq(dao.name(), "Goverence Token");
-        assertEq(dao.symbol(), "GOV");
-        assertEq(dao.totalSupply(), 1000 ether);
-        assertEq(dao.balanceOf(founder1), 500 ether);
-        assertEq(dao.balanceOf(founder2), 200 ether);
-        assertEq(dao.balanceOf(founder3), 300 ether);
-        vm.stopPrank();
-    }
-
     function testCreateProposal() public {
+        vm.startPrank(founder1);
+
         address daoDiamond = _createDAO();
         DaoFacet dao = DaoFacet(daoDiamond);
 
-        vm.startPrank(alice);
-        vm.expectRevert("No enough shares to create proposal");
-        dao.createProposal(new bytes(0));
-        vm.stopPrank();
+        IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](1);
 
-        vm.startPrank(founder1);
-        uint256 proposalId = dao.createProposal(new bytes(0));
+        bytes4[] memory ownershipCutSelectors = new bytes4[](2);
+        ownershipCutSelectors[0] = ownershipFacet.transferOwnership.selector;
+        ownershipCutSelectors[1] = ownershipFacet.owner.selector;
+
+        cut[0] = IDiamondCut.FacetCut({
+            facetAddress: address(ownershipFacet),
+            action: IDiamondCut.FacetCutAction.Add,
+            functionSelectors: ownershipCutSelectors
+        });
+
+        uint256 proposalId = dao.createProposal(
+            abi.encodeWithSelector(
+                diamondCutFacet.diamondCutByProposal.selector,
+                ++s.proposalCount,
+                cut,
+                address(ownershipInit),
+                abi.encodeWithSignature("init(address)", founder2)
+            )
+        );
+
         Proposal memory proposal = dao.checkProposal(proposalId);
+
         assertEq(proposalId, 1);
         assertEq(proposal.id, proposalId);
         assertEq(proposal.author, founder1);
         assertEq(uint256(proposal.status), uint256(Status.Pending));
-        vm.stopPrank();
-    }
 
-    function testVote() public {
-        address daoDiamond = _createDAO();
-        DaoFacet dao = DaoFacet(daoDiamond);
-
-        vm.startPrank(founder1);
-        uint256 proposalId = dao.createProposal(new bytes(0));
-        dao.vote(proposalId, Side.Yes);
-        vm.expectRevert("Already voted");
-        dao.vote(proposalId, Side.No);
-        assertEq(dao.checkIsVoted(proposalId), true);
-        vm.stopPrank();
-
-        vm.startPrank(founder2);
-        dao.vote(proposalId, Side.No);
-        assertEq(dao.checkIsVoted(proposalId), true);
-        vm.stopPrank();
-
-        vm.startPrank(alice);
-        vm.expectRevert("You are not the member of the DAO");
-        dao.vote(proposalId, Side.Yes);
-        vm.stopPrank();
-
-        vm.startPrank(founder3);
-        dao.vote(proposalId, Side.Yes);
-        assertEq(dao.checkIsVoted(proposalId), true);
-        vm.stopPrank();
-
-        Proposal memory proposal = dao.checkProposal(proposalId);
-        assertEq(proposal.votesYes, dao.balanceOf(founder1) + dao.balanceOf(founder3));
-        assertEq(proposal.votesNo, dao.balanceOf(founder2));
-        assertEq(uint256(proposal.status), uint256(Status.Approved));
-
-        vm.startPrank(bob);
-        vm.warp(block.timestamp + 7 days);
-        deal(daoDiamond, bob, 100 ether);
-        vm.expectRevert("Voting period is over");
-        dao.vote(proposalId, Side.Yes);
         vm.stopPrank();
     }
 
     // function testExecuteProposal() public {
-    //  Receiver[] memory receivers = new Receiver[](2);
-    // receivers[0] = Receiver(founder1, 300 ether);
-    // receivers[0] = Receiver(alice, 100 ether);
-    // receivers[0] = Receiver(bob, 100 ether);
     //     vm.startPrank(founder1);
     //     address diamond = factory.createDAODiamond(
     //         "EasyDAO",

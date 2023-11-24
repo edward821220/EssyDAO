@@ -9,7 +9,8 @@ enum Side {
 enum Status {
     Pending,
     Approved,
-    Rejected
+    Rejected,
+    Finished
 }
 
 struct Proposal {
@@ -25,6 +26,11 @@ struct Proposal {
 struct FounderInfo {
     address founder;
     uint256 shares;
+}
+
+struct Receiver {
+    address receiver;
+    uint256 amount;
 }
 
 struct AppStorage {
