@@ -71,54 +71,32 @@ contract DaoTest is BasicSetup {
         vm.stopPrank();
     }
 
-    // function testExecuteProposal() public {
-    //  Receiver[] memory receivers = new Receiver[](2);
-    // receivers[0] = Receiver(founderA, 300 ether);
-    // receivers[0] = Receiver(alice, 100 ether);
-    // receivers[0] = Receiver(bob, 100 ether);
-    //     vm.startPrank(founderA);
-    //     address diamond = factory.createDAODiamond(
-    //         "EasyDAO",
-    //         foundersInfo,
-    //         "Goverence Token",
-    //         "GOV",
-    //         address(diamondCutFacet),
-    //         address(diamondLoupeFacet),
-    //         address(daoFacet),
-    //         address(daoInit)
-    //     );
-    //     DaoFacet dao = DaoFacet(diamond);
-    //     IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](1);
+    function testMintByProposal() public {
+        address daoDiamond = _createDAO();
+        DaoFacet dao = DaoFacet(daoDiamond);
+        uint256 previousBalanceA = dao.balanceOf(founderA);
+        uint256 previousSupply = dao.totalSupply();
 
-    //     bytes4[] memory ownershipCutSelectors = new bytes4[](2);
-    //     ownershipCutSelectors[0] = ownershipFacet.transferOwnership.selector;
-    //     ownershipCutSelectors[1] = ownershipFacet.owner.selector;
-    //     cut[0] = IDiamondCut.FacetCut({
-    //         facetAddress: address(ownershipFacet),
-    //         action: IDiamondCut.FacetCutAction.Add,
-    //         functionSelectors: ownershipCutSelectors
-    //     });
+        Receiver[] memory receivers = new Receiver[](3);
+        receivers[0] = Receiver(founderA, 300 ether);
+        receivers[1] = Receiver(alice, 200 ether);
+        receivers[2] = Receiver(bob, 100 ether);
 
-    //     uint256 proposalId = dao.createProposal(
-    //         abi.encodeWithSelector(
-    //             diamondCutFacet.diamondCutByProposal.selector,
-    //             ++s.proposalCount,
-    //             cut,
-    //             address(ownershipInit),
-    //             abi.encodeWithSignature("init(address)", founderB)
-    //         )
-    //     );
-    //     dao.vote(proposalId, Side.Yes);
-    //     assertEq(dao.checkIsVoted(proposalId), true);
-    //     vm.stopPrank();
+        vm.startPrank(founderA);
+        uint256 proposalId = dao.createProposal(abi.encodeWithSelector(dao.mintByProposal.selector, receivers));
+        vm.expectRevert("Proposal is not approved");
+        dao.executeProposal(proposalId);
+        dao.vote(proposalId, Side.Yes);
+        vm.stopPrank();
 
-    //     vm.startPrank(founderB);
-    //     dao.vote(proposalId, Side.Yes);
-    //     assertEq(dao.checkIsVoted(proposalId), true);
-    //     assertEq(uint256(dao.checkProposal(proposalId).status), 1);
-    //     dao.executeProposal(proposalId);
-    //     OwnershipFacet upgradedDao = OwnershipFacet(diamond);
-    //     assertEq(upgradedDao.owner(), founderB);
-    //     vm.stopPrank();
-    // }
+        vm.startPrank(founderB);
+        dao.vote(proposalId, Side.Yes);
+        dao.executeProposal(proposalId);
+        vm.stopPrank();
+
+        assertEq(dao.totalSupply(), previousSupply + 600 ether);
+        assertEq(dao.balanceOf(founderA), previousBalanceA + 300 ether);
+        assertEq(dao.balanceOf(alice), 200 ether);
+        assertEq(dao.balanceOf(bob), 100 ether);
+    }
 }

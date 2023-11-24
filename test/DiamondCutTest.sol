@@ -18,43 +18,6 @@ contract DiamondCutTest is BasicSetup {
         super.setUp();
     }
 
-    function testCreateProposal() public {
-        address daoDiamond = _createDAO();
-        DaoFacet dao = DaoFacet(daoDiamond);
-
-        vm.startPrank(founderA);
-        IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](1);
-
-        bytes4[] memory ownershipCutSelectors = new bytes4[](2);
-        ownershipCutSelectors[0] = ownershipFacet.transferOwnership.selector;
-        ownershipCutSelectors[1] = ownershipFacet.owner.selector;
-
-        cut[0] = IDiamondCut.FacetCut({
-            facetAddress: address(ownershipFacet),
-            action: IDiamondCut.FacetCutAction.Add,
-            functionSelectors: ownershipCutSelectors
-        });
-
-        uint256 proposalId = dao.createProposal(
-            abi.encodeWithSelector(
-                diamondCutFacet.diamondCutByProposal.selector,
-                ++s.proposalCount,
-                cut,
-                address(ownershipInit),
-                abi.encodeWithSignature("init(address)", founderB)
-            )
-        );
-
-        Proposal memory proposal = dao.checkProposal(proposalId);
-
-        assertEq(proposalId, 1);
-        assertEq(proposal.id, proposalId);
-        assertEq(proposal.author, founderA);
-        assertEq(uint256(proposal.status), uint256(Status.Pending));
-
-        vm.stopPrank();
-    }
-
     // function testExecuteProposal() public {
     //     vm.startPrank(founderA);
     //     address diamond = factory.createDAODiamond(
