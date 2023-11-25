@@ -46,7 +46,6 @@ struct AppStorage {
     uint256 totalSupply;
     mapping(address account => uint256) balances;
     mapping(address account => mapping(address spender => uint256)) allowances;
-    uint256 proposalCount;
-    mapping(uint256 => Proposal) proposals;
+    Proposal[] proposals;
     mapping(address => mapping(uint256 => bool)) isVoted;
 }

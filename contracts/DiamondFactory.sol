@@ -43,6 +43,10 @@ contract DiamondFactory is Ownable {
         return DAOs[index];
     }
 
+    function getDAOs() external view returns (DAOInfo[] memory) {
+        return DAOs;
+    }
+
     function withdraw() external onlyOwner {
         payable(owner()).transfer(address(this).balance);
     }

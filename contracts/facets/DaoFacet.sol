@@ -14,20 +14,22 @@ contract DaoFacet is IERC20, IERC20Metadata, IERC20Errors {
 
     function createProposal(bytes calldata data_) external returns (uint256 proposalId) {
         require(balanceOf(msg.sender) >= CREATE_PROPOSAL_MIN_SHARES, "No enough shares to create proposal");
-        proposalId = ++s.proposalCount;
-        s.proposals[proposalId] = Proposal({
-            id: proposalId,
-            author: msg.sender,
-            createdAt: block.timestamp,
-            votesYes: 0,
-            votesNo: 0,
-            data: data_,
-            status: Status.Pending
-        });
+        proposalId = s.proposals.length + 1;
+        s.proposals.push(
+            Proposal({
+                id: proposalId,
+                author: msg.sender,
+                createdAt: block.timestamp,
+                votesYes: 0,
+                votesNo: 0,
+                data: data_,
+                status: Status.Pending
+            })
+        );
     }
 
-    function executeProposal(uint256 proposalId_) external {
-        Proposal storage proposal = s.proposals[proposalId_];
+    function executeProposal(uint256 proposalId) external {
+        Proposal storage proposal = s.proposals[proposalId - 1];
         require(proposal.status == Status.Approved, "Proposal is not approved");
         require(proposal.data.length > 0, "No data to execute");
         (bool success,) = s.diamond.call(proposal.data);
@@ -38,10 +40,10 @@ contract DaoFacet is IERC20, IERC20Metadata, IERC20Errors {
     function vote(uint256 proposalId, Side side) external {
         require(balanceOf(msg.sender) > 0, "You are not the member of the DAO");
         require(s.isVoted[msg.sender][proposalId] == false, "Already voted");
-        require(block.timestamp - s.proposals[proposalId].createdAt < VOTING_PERIOD, "Voting period is over");
+        require(block.timestamp - s.proposals[proposalId - 1].createdAt < VOTING_PERIOD, "Voting period is over");
 
         s.isVoted[msg.sender][proposalId] = true;
-        Proposal storage proposal = s.proposals[proposalId];
+        Proposal storage proposal = s.proposals[proposalId - 1];
         if (side == Side.Yes) {
             proposal.votesYes += balanceOf(msg.sender);
             if (proposal.votesYes * 100 / totalSupply() > 50) {
@@ -60,7 +62,11 @@ contract DaoFacet is IERC20, IERC20Metadata, IERC20Errors {
     }
 
     function checkProposal(uint256 proposalId) external view returns (Proposal memory) {
-        return s.proposals[proposalId];
+        return s.proposals[proposalId - 1];
+    }
+
+    function getProposals() external view returns (Proposal[] memory) {
+        return s.proposals;
     }
 
     function mintByProposal(Receiver[] calldata receivers) external {
