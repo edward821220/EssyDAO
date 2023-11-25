@@ -69,16 +69,23 @@ contract DaoTest is BasicSetup {
         vm.stopPrank();
     }
 
-    function testMintByProposal() public {
+    function testMintByProposal(uint256 amountA, uint256 amountAlice, uint256 amountBob) public {
+        vm.assume(amountA <= 8888 ether);
+        vm.assume(amountAlice <= 8888 ether);
+        vm.assume(amountBob <= 8888 ether);
+
         address daoDiamond = _createDAO();
         DaoFacet dao = DaoFacet(daoDiamond);
+
         uint256 previousBalanceA = dao.balanceOf(founderA);
+        uint256 previousBalanceAlice = dao.balanceOf(alice);
+        uint256 previousBalanceBob = dao.balanceOf(bob);
         uint256 previousSupply = dao.totalSupply();
 
         Receiver[] memory receivers = new Receiver[](3);
-        receivers[0] = Receiver(founderA, 300 ether);
-        receivers[1] = Receiver(alice, 200 ether);
-        receivers[2] = Receiver(bob, 100 ether);
+        receivers[0] = Receiver(founderA, amountA);
+        receivers[1] = Receiver(alice, amountAlice);
+        receivers[2] = Receiver(bob, amountBob);
 
         vm.expectRevert("Only executeProposal function can call this function");
         dao.mintByProposal(receivers);
@@ -95,10 +102,10 @@ contract DaoTest is BasicSetup {
         dao.executeProposal(proposalId);
         vm.stopPrank();
 
-        assertEq(dao.totalSupply(), previousSupply + 600 ether);
-        assertEq(dao.balanceOf(founderA), previousBalanceA + 300 ether);
-        assertEq(dao.balanceOf(alice), 200 ether);
-        assertEq(dao.balanceOf(bob), 100 ether);
+        assertEq(dao.totalSupply(), previousSupply + amountA + amountAlice + amountBob);
+        assertEq(dao.balanceOf(founderA), previousBalanceA + amountA);
+        assertEq(dao.balanceOf(alice), previousBalanceAlice + amountAlice);
+        assertEq(dao.balanceOf(bob), previousBalanceBob + amountBob);
         assertEq(uint256(dao.checkProposal(proposalId).status), uint256(Status.Finished));
     }
 }
