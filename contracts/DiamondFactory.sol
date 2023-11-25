@@ -4,12 +4,12 @@ pragma solidity ^0.8.0;
 import {Diamond} from "../contracts/Diamond.sol";
 import {DiamondCutFacet} from "../contracts/facets/DiamondCutFacet.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {FounderInfo} from "./utils/AppStorage.sol";
+import {FounderInfo, DAOInfo} from "./utils/AppStorage.sol";
 
 contract DiamondFactory is Ownable {
-    address[] public DAOs;
+    DAOInfo[] public DAOs;
 
-    event DAOCreated(address indexed daoAddress, address indexed founder);
+    event DAOCreated(address indexed daoAddress, address indexed founder, string indexed daoName);
 
     constructor(address owner) Ownable(owner) {}
 
@@ -18,10 +18,10 @@ contract DiamondFactory is Ownable {
     fallback() external payable {}
 
     function createDAODiamond(
-        string calldata daoName,
-        FounderInfo[] calldata foundersInfo,
-        string calldata tokenName,
-        string calldata tokenSymbol,
+        string memory daoName,
+        FounderInfo[] memory foundersInfo,
+        string memory tokenName,
+        string memory tokenSymbol,
         address diamondCutFacet,
         address diamondLoupeFacet,
         address daoFacet,
@@ -30,14 +30,16 @@ contract DiamondFactory is Ownable {
         bytes32 salt_ = keccak256(abi.encodePacked(daoName, msg.sender));
 
         Diamond diamond =
-        new Diamond{salt: salt_}(msg.sender,foundersInfo, tokenName, tokenSymbol, diamondCutFacet, diamondLoupeFacet, daoFacet, daoInit);
+        new Diamond{salt: salt_}(msg.sender, daoName,foundersInfo, tokenName, tokenSymbol, diamondCutFacet, diamondLoupeFacet, daoFacet, daoInit);
 
-        DAOs.push(address(diamond));
-        emit DAOCreated(address(diamond), msg.sender);
+        DAOs.push(DAOInfo(address(diamond), daoName));
+
+        emit DAOCreated(address(diamond), msg.sender, daoName);
+
         return address(diamond);
     }
 
-    function getDAO(uint256 index) external view returns (address) {
+    function getDAO(uint256 index) external view returns (DAOInfo memory) {
         return DAOs[index];
     }
 

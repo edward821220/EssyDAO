@@ -6,11 +6,16 @@ import {AppStorage, FounderInfo} from "../utils/AppStorage.sol";
 contract DaoInit {
     AppStorage internal s;
 
-    function init(address diamond, string calldata name, string calldata symbol, FounderInfo[] memory foundersInfo)
-        external
-    {
-        s.name = name;
-        s.symbol = symbol;
+    function init(
+        address diamond,
+        string calldata daoName,
+        string calldata tokenName,
+        string calldata tokenSymbol,
+        FounderInfo[] calldata foundersInfo
+    ) external {
+        s.daoName = daoName;
+        s.tokenName = tokenName;
+        s.symbol = tokenSymbol;
         s.diamond = diamond;
         for (uint256 i = 0; i < foundersInfo.length; ++i) {
             address founder = foundersInfo[i].founder;

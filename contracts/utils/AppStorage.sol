@@ -23,6 +23,11 @@ struct Proposal {
     Status status;
 }
 
+struct DAOInfo {
+    address daoAddress;
+    string daoName;
+}
+
 struct FounderInfo {
     address founder;
     uint256 shares;
@@ -35,7 +40,8 @@ struct Receiver {
 
 struct AppStorage {
     address diamond;
-    string name;
+    string daoName;
+    string tokenName;
     string symbol;
     uint256 totalSupply;
     mapping(address account => uint256) balances;

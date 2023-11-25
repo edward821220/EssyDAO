@@ -15,6 +15,7 @@ import {DaoInit} from "./upgradeInitializers/DaoInit.sol";
 contract Diamond {
     constructor(
         address contractOwner,
+        string memory daoName,
         FounderInfo[] memory foundersInfo,
         string memory tokenName,
         string memory tokenSymbol,
@@ -56,7 +57,7 @@ contract Diamond {
 
         {
             // DaoFacet
-            bytes4[] memory daoSelectors = new bytes4[](15);
+            bytes4[] memory daoSelectors = new bytes4[](16);
             daoSelectors[0] = DaoFacet.createProposal.selector;
             daoSelectors[1] = DaoFacet.vote.selector;
             daoSelectors[2] = DaoFacet.name.selector;
@@ -72,6 +73,7 @@ contract Diamond {
             daoSelectors[12] = DaoFacet.checkProposal.selector;
             daoSelectors[13] = DaoFacet.executeProposal.selector;
             daoSelectors[14] = DaoFacet.mintByProposal.selector;
+            daoSelectors[15] = DaoFacet.daoName.selector;
 
             cut[2] = IDiamondCut.FacetCut({
                 facetAddress: daoFacet,
@@ -83,8 +85,9 @@ contract Diamond {
                 cut,
                 daoInit,
                 abi.encodeWithSignature(
-                    "init(address,string,string,(address,uint256)[])",
+                    "init(address,string,string,string,(address,uint256)[])",
                     address(this),
+                    daoName,
                     tokenName,
                     tokenSymbol,
                     foundersInfo

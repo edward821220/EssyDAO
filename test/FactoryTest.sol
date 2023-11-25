@@ -7,7 +7,7 @@ import {Diamond} from "../contracts/Diamond.sol";
 import {DaoFacet} from "../contracts/facets/DaoFacet.sol";
 
 contract FactoryTest is BasicSetup {
-    event DAOCreated(address indexed daoAddress, address indexed founder);
+    event DAOCreated(address indexed daoAddress, address indexed founder, string indexed daoName);
 
     error OwnableUnauthorizedAccount(address account);
 
@@ -19,11 +19,13 @@ contract FactoryTest is BasicSetup {
         address calculatedAddress = _calculateAddress();
 
         vm.expectEmit(true, true, true, true);
-        emit DAOCreated(calculatedAddress, founderA);
+        emit DAOCreated(calculatedAddress, founderA, "EasyDAO");
         DaoFacet dao = DaoFacet(_createDAO());
 
         assertEq(factory.owner(), admin);
-        assertEq(factory.getDAO(0), address(dao));
+        assertEq(factory.getDAO(0).daoAddress, address(dao));
+        assertEq(factory.getDAO(0).daoName, "EasyDAO");
+        assertEq(dao.daoName(), "EasyDAO");
         assertEq(dao.name(), "Goverence Token");
         assertEq(dao.symbol(), "GOV");
         assertEq(dao.totalSupply(), 1000 ether);
@@ -50,6 +52,7 @@ contract FactoryTest is BasicSetup {
                 type(Diamond).creationCode,
                 abi.encode(
                     founderA,
+                    "EasyDAO",
                     foundersInfo,
                     "Goverence Token",
                     "GOV",

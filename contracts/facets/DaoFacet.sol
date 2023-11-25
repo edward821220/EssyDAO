@@ -71,8 +71,12 @@ contract DaoFacet is IERC20, IERC20Metadata, IERC20Errors {
         }
     }
 
+    function daoName() public view returns (string memory) {
+        return s.daoName;
+    }
+
     function name() public view returns (string memory) {
-        return s.name;
+        return s.tokenName;
     }
 
     function symbol() public view returns (string memory) {
