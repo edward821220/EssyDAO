@@ -57,7 +57,7 @@ contract Diamond {
 
         {
             // DaoFacet
-            bytes4[] memory daoSelectors = new bytes4[](16);
+            bytes4[] memory daoSelectors = new bytes4[](17);
             daoSelectors[0] = DaoFacet.createProposal.selector;
             daoSelectors[1] = DaoFacet.vote.selector;
             daoSelectors[2] = DaoFacet.name.selector;
@@ -74,6 +74,7 @@ contract Diamond {
             daoSelectors[13] = DaoFacet.executeProposal.selector;
             daoSelectors[14] = DaoFacet.mintByProposal.selector;
             daoSelectors[15] = DaoFacet.daoName.selector;
+            daoSelectors[16] = DaoFacet.balanceOfAt.selector;
 
             cut[2] = IDiamondCut.FacetCut({
                 facetAddress: daoFacet,

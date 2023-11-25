@@ -44,11 +44,13 @@ contract DaoTest is BasicSetup {
         vm.startPrank(founderB);
         dao.vote(proposalId, Side.No);
         assertEq(dao.checkIsVoted(proposalId), true);
+        dao.transfer(alice, 100 ether);
         vm.stopPrank();
 
         vm.startPrank(alice);
-        vm.expectRevert("You are not the member of the DAO");
+        vm.expectRevert("You didn't have enough shares at the time of proposal created");
         dao.vote(proposalId, Side.Yes);
+        dao.transfer(founderB, 100 ether);
         vm.stopPrank();
 
         vm.startPrank(founderC);
@@ -57,8 +59,11 @@ contract DaoTest is BasicSetup {
         vm.stopPrank();
 
         Proposal memory proposal = dao.checkProposal(proposalId);
-        assertEq(proposal.votesYes, dao.balanceOf(founderA) + dao.balanceOf(founderC));
-        assertEq(proposal.votesNo, dao.balanceOf(founderB));
+        assertEq(
+            proposal.votesYes,
+            dao.balanceOfAt(founderA, proposal.snapshotId) + dao.balanceOfAt(founderC, proposal.snapshotId)
+        );
+        assertEq(proposal.votesNo, dao.balanceOfAt(founderB, proposal.snapshotId));
         assertEq(uint256(proposal.status), uint256(Status.Approved));
 
         vm.startPrank(bob);

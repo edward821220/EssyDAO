@@ -1,12 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import {Arrays} from "@openzeppelin/contracts/utils/Arrays.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {IERC20Errors} from "@openzeppelin/contracts/interfaces/draft-IERC6093.sol";
-import {AppStorage, Side, Proposal, Status, Receiver} from "../utils/AppStorage.sol";
+import {AppStorage, Side, Proposal, Status, Receiver, Snapshots} from "../utils/AppStorage.sol";
 
 contract DaoFacet is IERC20, IERC20Metadata, IERC20Errors {
+    using Arrays for uint256[];
+
     AppStorage internal s;
 
     uint256 constant CREATE_PROPOSAL_MIN_SHARES = 100e18;
@@ -23,7 +26,8 @@ contract DaoFacet is IERC20, IERC20Metadata, IERC20Errors {
                 votesYes: 0,
                 votesNo: 0,
                 data: data_,
-                status: Status.Pending
+                status: Status.Pending,
+                snapshotId: _getCurrentSnapshotId()
             })
         );
     }
@@ -38,20 +42,24 @@ contract DaoFacet is IERC20, IERC20Metadata, IERC20Errors {
     }
 
     function vote(uint256 proposalId, Side side) external {
-        require(balanceOf(msg.sender) > 0, "You are not the member of the DAO");
         require(s.isVoted[msg.sender][proposalId] == false, "Already voted");
         require(block.timestamp - s.proposals[proposalId - 1].createdAt < VOTING_PERIOD, "Voting period is over");
 
-        s.isVoted[msg.sender][proposalId] = true;
         Proposal storage proposal = s.proposals[proposalId - 1];
+        uint256 balanceSnapshot = balanceOfAt(msg.sender, proposal.snapshotId);
+        uint256 totalSupplySpanpshot = totalSupplyAt(proposal.snapshotId);
+        require(balanceSnapshot > 0, "You didn't have enough shares at the time of proposal created");
+
+        s.isVoted[msg.sender][proposalId] = true;
+
         if (side == Side.Yes) {
-            proposal.votesYes += balanceOf(msg.sender);
-            if (proposal.votesYes * 100 / totalSupply() > 50) {
+            proposal.votesYes += balanceSnapshot;
+            if (proposal.votesYes * 100 / totalSupplySpanpshot > 50) {
                 proposal.status = Status.Approved;
             }
         } else {
-            proposal.votesNo += balanceOf(msg.sender);
-            if (proposal.votesNo * 100 / totalSupply() > 50) {
+            proposal.votesNo += balanceSnapshot;
+            if (proposal.votesNo * 100 / totalSupplySpanpshot > 50) {
                 proposal.status = Status.Rejected;
             }
         }
@@ -97,8 +105,20 @@ contract DaoFacet is IERC20, IERC20Metadata, IERC20Errors {
         return s.totalSupply;
     }
 
+    function totalSupplyAt(uint256 snapshotId) public view virtual returns (uint256) {
+        (bool snapshotted, uint256 value) = _valueAt(snapshotId, s.totalSupplySnapshots);
+
+        return snapshotted ? value : totalSupply();
+    }
+
     function balanceOf(address account) public view returns (uint256) {
         return s.balances[account];
+    }
+
+    function balanceOfAt(address account, uint256 snapshotId) public view virtual returns (uint256) {
+        (bool snapshotted, uint256 value) = _valueAt(snapshotId, s.accountBalanceSnapshots[account]);
+
+        return snapshotted ? value : balanceOf(account);
     }
 
     function allowance(address owner, address spender) public view returns (uint256) {
@@ -136,8 +156,10 @@ contract DaoFacet is IERC20, IERC20Metadata, IERC20Errors {
 
     function _update(address from, address to, uint256 value) internal {
         if (from == address(0)) {
+            _updateTotalSupplySnapshot();
             s.totalSupply += value;
         } else {
+            _updateAccountSnapshot(from);
             uint256 fromBalance = s.balances[from];
             if (fromBalance < value) {
                 revert ERC20InsufficientBalance(from, fromBalance, value);
@@ -148,10 +170,12 @@ contract DaoFacet is IERC20, IERC20Metadata, IERC20Errors {
         }
 
         if (to == address(0)) {
+            _updateTotalSupplySnapshot();
             unchecked {
                 s.totalSupply -= value;
             }
         } else {
+            _updateAccountSnapshot(to);
             unchecked {
                 s.balances[to] += value;
             }
@@ -200,6 +224,54 @@ contract DaoFacet is IERC20, IERC20Metadata, IERC20Errors {
             unchecked {
                 _approve(owner, spender, currentAllowance - value, false);
             }
+        }
+    }
+
+    function _snapshot() internal virtual returns (uint256) {
+        s.currentSnapshotId++;
+        uint256 currentId = _getCurrentSnapshotId();
+        return currentId;
+    }
+
+    function _getCurrentSnapshotId() internal view virtual returns (uint256) {
+        return s.currentSnapshotId;
+    }
+
+    function _valueAt(uint256 snapshotId, Snapshots storage snapshots) private view returns (bool, uint256) {
+        require(snapshotId > 0, "ERC20Snapshot: id is 0");
+        require(snapshotId <= _getCurrentSnapshotId(), "ERC20Snapshot: nonexistent id");
+
+        uint256 index = snapshots.ids.findUpperBound(snapshotId);
+
+        if (index == snapshots.ids.length) {
+            return (false, 0);
+        } else {
+            return (true, snapshots.values[index]);
+        }
+    }
+
+    function _updateAccountSnapshot(address account) private {
+        _updateSnapshot(s.accountBalanceSnapshots[account], balanceOf(account));
+    }
+
+    function _updateTotalSupplySnapshot() private {
+        _updateSnapshot(s.totalSupplySnapshots, totalSupply());
+    }
+
+    function _updateSnapshot(Snapshots storage snapshots, uint256 currentValue) private {
+        uint256 currentId = _getCurrentSnapshotId();
+        if (_lastSnapshotId(snapshots.ids) < currentId) {
+            snapshots.ids.push(currentId);
+            snapshots.values.push(currentValue);
+        }
+        _snapshot();
+    }
+
+    function _lastSnapshotId(uint256[] storage ids) private view returns (uint256) {
+        if (ids.length == 0) {
+            return 0;
+        } else {
+            return ids[ids.length - 1];
         }
     }
 }

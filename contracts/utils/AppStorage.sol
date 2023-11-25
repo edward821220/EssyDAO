@@ -21,6 +21,7 @@ struct Proposal {
     uint256 votesNo;
     bytes data;
     Status status;
+    uint256 snapshotId;
 }
 
 struct DAOInfo {
@@ -38,6 +39,11 @@ struct Receiver {
     uint256 amount;
 }
 
+struct Snapshots {
+    uint256[] ids;
+    uint256[] values;
+}
+
 struct AppStorage {
     address diamond;
     string daoName;
@@ -47,5 +53,8 @@ struct AppStorage {
     mapping(address account => uint256) balances;
     mapping(address account => mapping(address spender => uint256)) allowances;
     Proposal[] proposals;
-    mapping(address => mapping(uint256 => bool)) isVoted;
+    mapping(address account => mapping(uint256 => bool)) isVoted;
+    mapping(address => Snapshots) accountBalanceSnapshots;
+    Snapshots totalSupplySnapshots;
+    uint256 currentSnapshotId;
 }
