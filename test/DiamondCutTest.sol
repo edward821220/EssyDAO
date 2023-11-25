@@ -8,10 +8,13 @@ import {OwnershipFacet} from "../contracts/facets/optional/OwnershipFacet.sol";
 import {Side, Status} from "../contracts/utils/AppStorage.sol";
 
 contract DiamondCutTest is BasicSetup {
+    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+
     function setUp() public override {
         super.setUp();
     }
 
+    // Add ownership facet to test
     function testDiamondCutByProposal() public {
         address daoDiamond = _createDAO();
         DaoFacet dao = DaoFacet(daoDiamond);
@@ -42,6 +45,8 @@ contract DiamondCutTest is BasicSetup {
 
         vm.startPrank(founderB);
         dao.vote(proposalId, Side.Yes);
+        vm.expectEmit(true, true, true, true);
+        emit OwnershipTransferred(address(0), founderB);
         dao.executeProposal(proposalId);
         OwnershipFacet upgradedDao = OwnershipFacet(daoDiamond);
         vm.stopPrank();
