@@ -9,7 +9,7 @@ import {DaoFacet} from "../../contracts/facets/DaoFacet.sol";
 import {DaoInit} from "../../contracts/upgradeInitializers/DaoInit.sol";
 import {OwnershipFacet} from "../../contracts/facets/optional/OwnershipFacet.sol";
 import {OwnershipInit} from "../../contracts/upgradeInitializers/OwnershipInit.sol";
-import {AppStorage, FounderInfo, Proposal, Side, Status} from "../../contracts/utils/AppStorage.sol";
+import {AppStorage, FounderInfo} from "../../contracts/utils/AppStorage.sol";
 
 contract BasicSetup is Test {
     AppStorage internal s;

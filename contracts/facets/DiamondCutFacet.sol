@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import {IDiamondCut} from "../interfaces/IDiamondCut.sol";
 import {LibDiamond} from "../utils/LibDiamond.sol";
-import {AppStorage, Status} from "../utils/AppStorage.sol";
+import {AppStorage} from "../utils/AppStorage.sol";
 
 contract DiamondCutFacet is IDiamondCut {
     AppStorage internal s;
@@ -14,13 +14,8 @@ contract DiamondCutFacet is IDiamondCut {
         LibDiamond.diamondCut(_diamondCut, _init, _calldata);
     }
 
-    function diamondCutByProposal(
-        uint256 proposalId,
-        FacetCut[] calldata _diamondCut,
-        address _init,
-        bytes calldata _calldata
-    ) external {
-        require(s.proposals[proposalId].status == Status.Approved, "Proposal not approved");
+    function diamondCutByProposal(FacetCut[] calldata _diamondCut, address _init, bytes calldata _calldata) external {
+        require(msg.sender == s.diamond, "Only executeProposal function can call this function");
         LibDiamond.diamondCut(_diamondCut, _init, _calldata);
     }
 }

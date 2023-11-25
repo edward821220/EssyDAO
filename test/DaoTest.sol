@@ -2,10 +2,8 @@
 pragma solidity ^0.8.0;
 
 import {BasicSetup} from "./helper/BasicSetup.sol";
-import {IDiamondCut} from "../contracts/interfaces/IDiamondCut.sol";
-import {DiamondCutFacet} from "../contracts/facets/DiamondCutFacet.sol";
 import {DaoFacet} from "../contracts/facets/DaoFacet.sol";
-import {AppStorage, FounderInfo, Proposal, Side, Status, Receiver} from "../contracts/utils/AppStorage.sol";
+import {Proposal, Side, Status, Receiver} from "../contracts/utils/AppStorage.sol";
 
 contract DaoTest is BasicSetup {
     function setUp() public override {
@@ -82,6 +80,9 @@ contract DaoTest is BasicSetup {
         receivers[1] = Receiver(alice, 200 ether);
         receivers[2] = Receiver(bob, 100 ether);
 
+        vm.expectRevert("Only executeProposal function can call this function");
+        dao.mintByProposal(receivers);
+
         vm.startPrank(founderA);
         uint256 proposalId = dao.createProposal(abi.encodeWithSelector(dao.mintByProposal.selector, receivers));
         vm.expectRevert("Proposal is not approved");
@@ -98,5 +99,6 @@ contract DaoTest is BasicSetup {
         assertEq(dao.balanceOf(founderA), previousBalanceA + 300 ether);
         assertEq(dao.balanceOf(alice), 200 ether);
         assertEq(dao.balanceOf(bob), 100 ether);
+        assertEq(uint256(dao.checkProposal(proposalId).status), uint256(Status.Finished));
     }
 }

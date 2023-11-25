@@ -22,12 +22,7 @@ interface IDiamondCut {
     ///                  _calldata is executed with delegatecall on _init
     function diamondCut(FacetCut[] calldata _diamondCut, address _init, bytes calldata _calldata) external;
 
-    function diamondCutByProposal(
-        uint256 proposalId,
-        FacetCut[] calldata _diamondCut,
-        address _init,
-        bytes calldata _calldata
-    ) external;
+    function diamondCutByProposal(FacetCut[] calldata _diamondCut, address _init, bytes calldata _calldata) external;
 
     event DiamondCut(FacetCut[] _diamondCut, address _init, bytes _calldata);
 }

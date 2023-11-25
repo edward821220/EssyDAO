@@ -64,6 +64,7 @@ contract DaoFacet is IERC20, IERC20Metadata, IERC20Errors {
     }
 
     function mintByProposal(Receiver[] calldata reveivers) external {
+        require(msg.sender == s.diamond, "Only executeProposal function can call this function");
         for (uint256 i = 0; i < reveivers.length; ++i) {
             _mint(reveivers[i].receiver, reveivers[i].amount);
         }
