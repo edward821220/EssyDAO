@@ -55,4 +55,65 @@ contract DiamondCutTest is BasicSetup {
         assertEq(upgradedDao.owner(), founderB);
         assertEq(uint256(dao.checkProposal(proposalId).status), uint256(Status.Finished));
     }
+
+    // Remove ownership facet to test
+    function testDiamondCutByOwner() public {
+        address daoDiamond = _createDAO();
+        DaoFacet dao = DaoFacet(daoDiamond);
+
+        vm.startPrank(founderA);
+        IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](1);
+
+        bytes4[] memory ownershipCutSelectors = new bytes4[](2);
+        ownershipCutSelectors[0] = ownershipFacet.owner.selector;
+        ownershipCutSelectors[1] = ownershipFacet.transferOwnership.selector;
+
+        cut[0] = IDiamondCut.FacetCut({
+            facetAddress: address(ownershipFacet),
+            action: IDiamondCut.FacetCutAction.Add,
+            functionSelectors: ownershipCutSelectors
+        });
+
+        uint256 proposalId = dao.createProposal(
+            abi.encodeWithSelector(
+                diamondCutFacet.diamondCutByProposal.selector,
+                cut,
+                address(ownershipInit),
+                abi.encodeWithSignature("init(address)", founderC)
+            )
+        );
+        dao.vote(proposalId, Side.Yes);
+        vm.stopPrank();
+
+        vm.startPrank(founderB);
+        dao.vote(proposalId, Side.Yes);
+        vm.expectEmit(true, true, true, true);
+        emit OwnershipTransferred(address(0), founderC);
+        dao.executeProposal{value: 0.006 ether}(proposalId);
+        IDiamondCut upgradedDao = IDiamondCut(daoDiamond);
+        vm.stopPrank();
+
+        vm.startPrank(founderC);
+        cut[0] = IDiamondCut.FacetCut({
+            facetAddress: address(0),
+            action: IDiamondCut.FacetCutAction.Remove,
+            functionSelectors: ownershipCutSelectors
+        });
+
+        upgradedDao.diamondCut{value: 0.006 ether}(
+            cut, address(ownershipInit), abi.encodeWithSignature("init(address)", address(0))
+        );
+
+        // After removing ownership facet, the previous owner will lose ownership
+        vm.expectRevert("LibDiamond: Must be contract owner");
+        upgradedDao.diamondCut{value: 0.006 ether}(
+            cut, address(ownershipInit), abi.encodeWithSignature("init(address)", address(0))
+        );
+        // And the new DAO will not be have any ownership method
+        OwnershipFacet upgradedV2Dao = OwnershipFacet(daoDiamond);
+        vm.expectRevert("Diamond: Function does not exist");
+        upgradedV2Dao.transferOwnership(founderA);
+
+        vm.stopPrank();
+    }
 }
