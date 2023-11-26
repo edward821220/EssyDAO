@@ -29,6 +29,22 @@ contract DaoTest is BasicSetup {
         vm.stopPrank();
     }
 
+    function testCancelProposal() public {
+        address daoDiamond = _createDAO();
+        DaoFacet dao = DaoFacet(daoDiamond);
+
+        vm.startPrank(founderA);
+        uint256 proposalId = dao.createProposal(new bytes(0));
+        dao.cancelProposal(proposalId);
+        assertEq(uint256(dao.checkProposal(proposalId).status), uint256(Status.Cancelled));
+        vm.stopPrank();
+
+        vm.startPrank(founderB);
+        vm.expectRevert("Proposal is cancelled");
+        dao.vote(proposalId, Side.Yes);
+        vm.stopPrank();
+    }
+
     function testVote() public {
         address daoDiamond = _createDAO();
         DaoFacet dao = DaoFacet(daoDiamond);

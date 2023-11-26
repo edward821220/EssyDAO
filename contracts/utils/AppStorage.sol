@@ -10,7 +10,8 @@ enum Status {
     Pending,
     Approved,
     Rejected,
-    Finished
+    Finished,
+    Cancelled
 }
 
 struct Proposal {

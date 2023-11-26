@@ -32,6 +32,13 @@ contract DaoFacet is IERC20, IERC20Metadata, IERC20Errors {
         );
     }
 
+    function cancelProposal(uint256 proposalId) external {
+        Proposal memory proposal = s.proposals[proposalId - 1];
+        require(proposal.author == msg.sender, "Only author can cancel proposal");
+        require(proposal.status == Status.Pending, "Proposal is not pending");
+        s.proposals[proposalId - 1].status = Status.Cancelled;
+    }
+
     function executeProposal(uint256 proposalId) external payable {
         Proposal storage proposal = s.proposals[proposalId - 1];
         require(proposal.status == Status.Approved, "Proposal is not approved");
@@ -46,6 +53,7 @@ contract DaoFacet is IERC20, IERC20Metadata, IERC20Errors {
         require(block.timestamp - s.proposals[proposalId - 1].createdAt < VOTING_PERIOD, "Voting period is over");
 
         Proposal storage proposal = s.proposals[proposalId - 1];
+        require(proposal.status != Status.Cancelled, "Proposal is cancelled");
         uint256 balanceSnapshot = balanceOfAt(msg.sender, proposal.snapshotId);
         uint256 totalSupplySpanpshot = totalSupplyAt(proposal.snapshotId);
         require(balanceSnapshot > 0, "You didn't have enough shares at the time of proposal created");
