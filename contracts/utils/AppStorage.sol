@@ -45,6 +45,13 @@ struct Snapshots {
     uint256[] values;
 }
 
+struct Dividend {
+    uint256 snapshopId;
+    uint256 startTime;
+    uint256 duration;
+    uint256 annualRate;
+}
+
 struct AppStorage {
     address diamond;
     string daoName;
@@ -58,4 +65,6 @@ struct AppStorage {
     mapping(address => Snapshots) accountBalanceSnapshots;
     Snapshots totalSupplySnapshots;
     uint256 currentSnapshotId;
+    Dividend dividendInfo;
+    mapping(address account => uint256) tokenReleased;
 }

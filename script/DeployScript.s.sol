@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {Script, console2} from "forge-std/Script.sol";
+import {Script} from "forge-std/Script.sol";
 
-contract DAOScript is Script {
+contract DeployScript is Script {
     function setUp() public {}
 
     function run() public {
