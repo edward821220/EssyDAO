@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8;
 
-import {Test, console2} from "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 import {DiamondFactory} from "../../contracts/DiamondFactory.sol";
 import {DiamondCutFacet} from "../../contracts/facets/DiamondCutFacet.sol";
 import {DiamondLoupeFacet} from "../../contracts/facets/DiamondLoupeFacet.sol";
@@ -9,6 +9,8 @@ import {DaoFacet} from "../../contracts/facets/DaoFacet.sol";
 import {DaoInit} from "../../contracts/upgradeInitializers/DaoInit.sol";
 import {OwnershipFacet} from "../../contracts/facets/optional/OwnershipFacet.sol";
 import {OwnershipInit} from "../../contracts/upgradeInitializers/OwnershipInit.sol";
+import {DividendFacet} from "../../contracts/facets/optional/DividendFacet.sol";
+import {DividendInit} from "../../contracts/upgradeInitializers/DividendInit.sol";
 import {AppStorage, FounderInfo} from "../../contracts/utils/AppStorage.sol";
 
 contract BasicSetup is Test {
@@ -20,6 +22,8 @@ contract BasicSetup is Test {
     DaoInit internal daoInit;
     OwnershipFacet internal ownershipFacet;
     OwnershipInit internal ownershipInit;
+    DividendFacet internal dividendFacet;
+    DividendInit internal dividendInit;
     FounderInfo[] internal foundersInfo;
 
     address admin = makeAddr("Admin");
@@ -38,6 +42,8 @@ contract BasicSetup is Test {
         daoInit = new DaoInit();
         ownershipFacet = new OwnershipFacet();
         ownershipInit = new OwnershipInit();
+        dividendFacet = new DividendFacet();
+        dividendInit = new DividendInit();
         vm.stopPrank();
 
         foundersInfo.push(FounderInfo(founderA, 500 ether));

@@ -7,27 +7,25 @@ import {DaoFacet} from "../DaoFacet.sol";
 contract DividendFacet is MintFunctions {
     function withdrawDividend() public returns (uint256 dividend) {
         dividend = calculateDividend();
+        require(dividend > 0, "No dividend to withdraw");
         s.tokenReleased[msg.sender] += dividend;
         _mint(msg.sender, dividend);
     }
 
     function calculateDividend() public view returns (uint256) {
         DaoFacet dao = DaoFacet(s.diamond);
-        uint256 snapshotId = s.dividendInfo.snapshopId;
-        uint256 startTime = getStartTime();
-        uint256 duration = getDuration();
-        uint256 annualRate = getAnnualRate();
-        uint256 timestamp = block.timestamp;
-
-        uint256 initialBalance = dao.balanceOfAt(msg.sender, snapshotId);
+        uint256 initialBalance = getInitialBalance();
         require(dao.balanceOf(msg.sender) >= initialBalance, "You should hold your initial balance");
 
-        uint256 totalDividend = annualRate * (duration / 86400) * initialBalance / 100;
-        uint256 releasedDividend = s.tokenReleased[msg.sender];
+        uint256 startTime = getStartTime();
+        uint256 duration = getDuration();
+        uint256 timestamp = block.timestamp;
+        uint256 totalDividend = getTotalDividend();
+        uint256 releasedDividend = getReleasedDividend();
 
         if (timestamp < startTime) {
             return 0;
-        } else if (timestamp - duration > startTime) {
+        } else if (timestamp > startTime + duration) {
             return totalDividend - releasedDividend;
         } else {
             return (totalDividend * (timestamp - startTime) / duration) - releasedDividend;
@@ -44,5 +42,18 @@ contract DividendFacet is MintFunctions {
 
     function getAnnualRate() public view returns (uint256) {
         return s.dividendInfo.annualRate;
+    }
+
+    function getInitialBalance() public view returns (uint256) {
+        DaoFacet dao = DaoFacet(s.diamond);
+        return dao.balanceOfAt(msg.sender, s.dividendInfo.snapshopId);
+    }
+
+    function getTotalDividend() public view returns (uint256 totalDividend) {
+        totalDividend = (getAnnualRate() * getDuration() * getInitialBalance()) / (100 * 52 weeks);
+    }
+
+    function getReleasedDividend() public view returns (uint256 releasedDividend) {
+        releasedDividend = s.tokenReleased[msg.sender];
     }
 }
