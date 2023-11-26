@@ -103,6 +103,7 @@ contract Diamond {
             ds.supportedInterfaces[type(IDiamondLoupe).interfaceId] = true;
             ds.supportedInterfaces[type(IERC165).interfaceId] = true;
             ds.supportedInterfaces[type(IERC173).interfaceId] = true;
+            ds.factory = msg.sender;
         }
 
         LibDiamond.setContractOwner(address(0));

@@ -47,10 +47,11 @@ contract DiamondCutTest is BasicSetup {
         dao.vote(proposalId, Side.Yes);
         vm.expectEmit(true, true, true, true);
         emit OwnershipTransferred(address(0), founderB);
-        dao.executeProposal(proposalId);
+        dao.executeProposal{value: 0.006 ether}(proposalId);
         OwnershipFacet upgradedDao = OwnershipFacet(daoDiamond);
         vm.stopPrank();
 
+        assertEq(address(factory).balance, 0.006 ether);
         assertEq(upgradedDao.owner(), founderB);
         assertEq(uint256(dao.checkProposal(proposalId).status), uint256(Status.Finished));
     }

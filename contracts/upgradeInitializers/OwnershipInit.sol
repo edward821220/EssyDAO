@@ -5,7 +5,7 @@ import {AppStorage} from "../utils/AppStorage.sol";
 import {LibDiamond} from "../utils/LibDiamond.sol";
 
 contract OwnershipInit {
-    function init(address newOwner) external {
+    function init(address newOwner) external payable {
         LibDiamond.setContractOwner(newOwner);
     }
 }

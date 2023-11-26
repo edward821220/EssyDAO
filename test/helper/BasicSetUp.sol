@@ -43,6 +43,10 @@ contract BasicSetup is Test {
         foundersInfo.push(FounderInfo(founderA, 500 ether));
         foundersInfo.push(FounderInfo(founderB, 200 ether));
         foundersInfo.push(FounderInfo(founderC, 300 ether));
+
+        deal(founderA, 100 ether);
+        deal(founderB, 100 ether);
+        deal(founderC, 100 ether);
     }
 
     function _createDAO() internal returns (address daoDiamond) {

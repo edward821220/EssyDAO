@@ -32,11 +32,11 @@ contract DaoFacet is IERC20, IERC20Metadata, IERC20Errors {
         );
     }
 
-    function executeProposal(uint256 proposalId) external {
+    function executeProposal(uint256 proposalId) external payable {
         Proposal storage proposal = s.proposals[proposalId - 1];
         require(proposal.status == Status.Approved, "Proposal is not approved");
         require(proposal.data.length > 0, "No data to execute");
-        (bool success,) = s.diamond.call(proposal.data);
+        (bool success,) = s.diamond.call{value: msg.value}(proposal.data);
         require(success, "Failed to execute");
         proposal.status = Status.Finished;
     }
