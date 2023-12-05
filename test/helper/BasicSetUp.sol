@@ -11,6 +11,8 @@ import {OwnershipFacet} from "../../contracts/facets/optional/OwnershipFacet.sol
 import {OwnershipInit} from "../../contracts/upgradeInitializers/OwnershipInit.sol";
 import {DividendFacet} from "../../contracts/facets/optional/DividendFacet.sol";
 import {DividendInit} from "../../contracts/upgradeInitializers/DividendInit.sol";
+import {VaultFacet} from "../../contracts/facets/optional/VaultFacet.sol";
+import {VaultInit} from "../../contracts/upgradeInitializers/VaultInit.sol";
 import {AppStorage, FounderInfo} from "../../contracts/utils/AppStorage.sol";
 
 contract BasicSetup is Test {
@@ -24,6 +26,8 @@ contract BasicSetup is Test {
     OwnershipInit internal ownershipInit;
     DividendFacet internal dividendFacet;
     DividendInit internal dividendInit;
+    VaultFacet internal vaultFacet;
+    VaultInit internal vaultInit;
     FounderInfo[] internal foundersInfo;
 
     address admin = makeAddr("Admin");
@@ -44,6 +48,8 @@ contract BasicSetup is Test {
         ownershipInit = new OwnershipInit();
         dividendFacet = new DividendFacet();
         dividendInit = new DividendInit();
+        vaultFacet = new VaultFacet();
+        vaultInit = new VaultInit();
         vm.stopPrank();
 
         foundersInfo.push(FounderInfo(founderA, 500 ether));

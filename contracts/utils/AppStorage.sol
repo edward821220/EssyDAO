@@ -52,6 +52,12 @@ struct Dividend {
     uint256 annualRate;
 }
 
+struct CrowdfundingInfo {
+    address crowdfundingInitiator;
+    string title;
+    uint256 amount;
+}
+
 struct AppStorage {
     address diamond;
     string daoName;
@@ -67,4 +73,6 @@ struct AppStorage {
     uint256 currentSnapshotId;
     Dividend dividendInfo;
     mapping(address account => uint256) tokenReleased;
+    mapping(address owner => mapping(address contractAddress => mapping(uint256 tokenId => bool))) NFTOwners;
+    CrowdfundingInfo[] crowdfundingInfos;
 }
