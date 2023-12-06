@@ -22,16 +22,18 @@ contract VaultTest is BasicSetup {
         vm.startPrank(founderA);
         IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](1);
 
-        bytes4[] memory vaultCutSelectors = new bytes4[](9);
-        vaultCutSelectors[0] = vaultFacet.checkCrowdfundingInfos.selector;
-        vaultCutSelectors[1] = vaultFacet.checkCrowdfundingInfo.selector;
-        vaultCutSelectors[2] = vaultFacet.createCrowdfundingETH.selector;
-        vaultCutSelectors[3] = vaultFacet.contributeETH.selector;
-        vaultCutSelectors[4] = vaultFacet.withdrawETHByCrowdfunding.selector;
-        vaultCutSelectors[5] = vaultFacet.wtihdrawETHByProposal.selector;
-        vaultCutSelectors[6] = vaultFacet.createCrowdfundingERC20.selector;
+        bytes4[] memory vaultCutSelectors = new bytes4[](11);
+        vaultCutSelectors[0] = vaultFacet.createCrowdfundingETH.selector;
+        vaultCutSelectors[1] = vaultFacet.contributeETH.selector;
+        vaultCutSelectors[2] = vaultFacet.withdrawETHByCrowdfunding.selector;
+        vaultCutSelectors[3] = vaultFacet.wtihdrawETHByProposal.selector;
+        vaultCutSelectors[4] = vaultFacet.createCrowdfundingERC20.selector;
+        vaultCutSelectors[5] = vaultFacet.contributeERC20.selector;
+        vaultCutSelectors[6] = vaultFacet.withdrawERC20ByCrowdfunding.selector;
         vaultCutSelectors[7] = vaultFacet.onERC721Received.selector;
         vaultCutSelectors[8] = vaultFacet.withdrawNFTByOwner.selector;
+        vaultCutSelectors[9] = vaultFacet.checkCrowdfundingInfos.selector;
+        vaultCutSelectors[10] = vaultFacet.checkCrowdfundingInfo.selector;
 
         cut[0] = IDiamondCut.FacetCut({
             facetAddress: address(vaultFacet),
@@ -92,7 +94,46 @@ contract VaultTest is BasicSetup {
         vm.stopPrank();
     }
 
-    function testCrowdfundingERC20() public {}
+    function testCrowdfundingERC20() public {
+        BearToken token = new BearToken();
+
+        vm.startPrank(alice);
+        vm.expectRevert("You are not the member of the DAO");
+        upgradedDao.createCrowdfundingERC20("Donate me", address(token), 100 ether);
+        vm.stopPrank();
+
+        vm.startPrank(founderB);
+        uint256 crowdfundingId =
+            upgradedDao.createCrowdfundingERC20("Facilitating organizational growth", address(token), 8888 ether);
+        assertEq(upgradedDao.checkCrowdfundingInfo(crowdfundingId).title, "Facilitating organizational growth");
+        assertEq(upgradedDao.checkCrowdfundingInfo(crowdfundingId).targetAmount, 8888 ether);
+        assertEq(upgradedDao.checkCrowdfundingInfo(crowdfundingId).token, address(token));
+        vm.stopPrank();
+
+        deal(address(token), founderC, 88 ether);
+        vm.startPrank(founderC);
+        vm.expectRevert("Contribution amount must be greater than 0");
+        upgradedDao.contributeETH(crowdfundingId);
+
+        uint256 initiatorBalanceBefore = token.balanceOf(founderB);
+        token.approve(address(upgradedDao), type(uint256).max);
+        upgradedDao.contributeERC20(crowdfundingId, 88 ether);
+        assertEq(upgradedDao.checkCrowdfundingInfo(crowdfundingId).currentAmount, 88 ether);
+        vm.stopPrank();
+
+        vm.startPrank(founderB);
+        upgradedDao.withdrawERC20ByCrowdfunding(crowdfundingId);
+        assertEq(token.balanceOf(founderB), initiatorBalanceBefore + 88 ether);
+
+        vm.expectRevert("Already withdrawn");
+        upgradedDao.withdrawERC20ByCrowdfunding(crowdfundingId);
+        vm.stopPrank();
+
+        vm.startPrank(bob);
+        vm.expectRevert("You are not the crowdfunding initiator");
+        upgradedDao.withdrawERC20ByCrowdfunding(crowdfundingId);
+        vm.stopPrank();
+    }
 
     function testWithdrawNFTByOwner() public {
         vm.startPrank(founderB);
