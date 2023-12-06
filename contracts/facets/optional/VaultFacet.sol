@@ -20,12 +20,13 @@ contract VaultFacet is IERC721Receiver {
     function contributeETH(uint256 crowdfundingId) external payable {
         require(msg.value > 0, "Contribution amount must be greater than 0");
         s.crowdfundingInfos[crowdfundingId].currentAmount += msg.value;
+        s.totalETHByFunding += msg.value;
     }
 
-    function withdrawETHByCrowdFunding(uint256 crowdfundingId) external {
+    function withdrawETHByCrowdfunding(uint256 crowdfundingId) external {
         CrowdfundingInfo memory crowdfundingInfo = checkCrowdfundingInfo(crowdfundingId);
 
-        require(msg.sender == crowdfundingInfo.crowdfundingInitiator, "You are not the crowd funding initiator");
+        require(msg.sender == crowdfundingInfo.crowdfundingInitiator, "You are not the crowdfunding initiator");
 
         uint256 amount = crowdfundingInfo.currentAmount - crowdfundingInfo.withdrawnAmount;
         require(amount > 0, "Already withdrawn");
@@ -35,20 +36,55 @@ contract VaultFacet is IERC721Receiver {
         payable(msg.sender).transfer(amount);
     }
 
-    function wtihdrawETHByProposal(address to, uint256 amount) external {
-        require(msg.sender == s.diamond, "Only executeProposal function can call this function");
-        payable(to).transfer(amount);
-    }
-
     function createCrowdfundingERC20(string calldata title, address token, uint256 amount) external returns (uint256) {
         require(s.balances[msg.sender] > 0, "You are not the member of the DAO");
         s.crowdfundingInfos.push(CrowdfundingInfo(msg.sender, title, token, amount, 0, 0));
         return s.crowdfundingInfos.length - 1;
     }
 
-    function withdrawERC20ByProposal(address to, address ERC20Contract, uint256 amount) external {
+    function contributeERC20(uint256 crowdfundingId, uint256 amount) external {
+        CrowdfundingInfo memory crowdfundingInfo = checkCrowdfundingInfo(crowdfundingId);
+        address token = crowdfundingInfo.token;
+        require(IERC20(token).balanceOf(msg.sender) >= amount, "You don't have enough tokens");
+        IERC20(token).transferFrom(msg.sender, address(this), amount);
+        s.crowdfundingInfos[crowdfundingId].currentAmount += amount;
+        s.totalTokensByFunding[token] += amount;
+    }
+
+    function withdrawERC20ByCrowdfunding(uint256 crowdfundingId) external {
+        CrowdfundingInfo memory crowdfundingInfo = checkCrowdfundingInfo(crowdfundingId);
+
+        require(msg.sender == crowdfundingInfo.crowdfundingInitiator, "You are not the crowdfunding initiator");
+
+        uint256 amount = crowdfundingInfo.currentAmount - crowdfundingInfo.withdrawnAmount;
+        require(amount > 0, "Already withdrawn");
+
+        crowdfundingInfo.withdrawnAmount += amount;
+        s.crowdfundingInfos[crowdfundingId] = crowdfundingInfo;
+
+        address token = crowdfundingInfo.token;
+        IERC20(token).transfer(msg.sender, amount);
+    }
+
+    // Accidentally received ETH or ERC20 can be transferred out through a Proposal.
+    function wtihdrawETHByProposal(address to, uint256 amount) external {
         require(msg.sender == s.diamond, "Only executeProposal function can call this function");
-        IERC20(ERC20Contract).transfer(to, amount);
+
+        uint256 balanceETH = address(this).balance;
+        uint256 fundingETH = s.totalETHByFunding;
+        require(balanceETH > fundingETH, "There is no spare ETH to withdraw");
+        require(balanceETH - fundingETH >= amount, "Insufficient withdrawable ETH");
+        payable(to).transfer(amount);
+    }
+
+    function withdrawERC20ByProposal(address to, address token, uint256 amount) external {
+        require(msg.sender == s.diamond, "Only executeProposal function can call this function");
+
+        uint256 balance = IERC20(token).balanceOf(address(this));
+        uint256 funding = s.totalTokensByFunding[token];
+        require(balance > funding, "There is no spare tokens to withdraw");
+        require(balance - funding >= amount, "Insufficient withdrawable tokens");
+        IERC20(token).transfer(to, amount);
     }
 
     function onERC721Received(address, address from, uint256 tokenId, bytes calldata) external returns (bytes4) {

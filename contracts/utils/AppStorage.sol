@@ -62,6 +62,7 @@ struct CrowdfundingInfo {
 }
 
 struct AppStorage {
+    // Dao Facet
     address diamond;
     string daoName;
     string tokenName;
@@ -74,8 +75,12 @@ struct AppStorage {
     mapping(address => Snapshots) accountBalanceSnapshots;
     Snapshots totalSupplySnapshots;
     uint256 currentSnapshotId;
+    // Dividend Facet
     Dividend dividendInfo;
     mapping(address account => uint256) tokenReleased;
-    mapping(address owner => mapping(address contractAddress => mapping(uint256 tokenId => bool))) NFTOwners;
+    // Vault Facet
     CrowdfundingInfo[] crowdfundingInfos;
+    uint256 totalETHByFunding;
+    mapping(address token => uint256) totalTokensByFunding;
+    mapping(address owner => mapping(address contractAddress => mapping(uint256 tokenId => bool))) NFTOwners;
 }

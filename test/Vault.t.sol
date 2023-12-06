@@ -27,7 +27,7 @@ contract VaultTest is BasicSetup {
         vaultCutSelectors[1] = vaultFacet.checkCrowdfundingInfo.selector;
         vaultCutSelectors[2] = vaultFacet.createCrowdfundingETH.selector;
         vaultCutSelectors[3] = vaultFacet.contributeETH.selector;
-        vaultCutSelectors[4] = vaultFacet.withdrawETHByCrowdFunding.selector;
+        vaultCutSelectors[4] = vaultFacet.withdrawETHByCrowdfunding.selector;
         vaultCutSelectors[5] = vaultFacet.wtihdrawETHByProposal.selector;
         vaultCutSelectors[6] = vaultFacet.createCrowdfundingERC20.selector;
         vaultCutSelectors[7] = vaultFacet.onERC721Received.selector;
@@ -79,18 +79,20 @@ contract VaultTest is BasicSetup {
         vm.stopPrank();
 
         vm.startPrank(founderB);
-        upgradedDao.withdrawETHByCrowdFunding(crowdfundingId);
+        upgradedDao.withdrawETHByCrowdfunding(crowdfundingId);
         assertEq(founderB.balance, initiatorBalanceBefore + 88 ether);
 
         vm.expectRevert("Already withdrawn");
-        upgradedDao.withdrawETHByCrowdFunding(crowdfundingId);
+        upgradedDao.withdrawETHByCrowdfunding(crowdfundingId);
         vm.stopPrank();
 
         vm.startPrank(bob);
-        vm.expectRevert("You are not the crowd funding initiator");
-        upgradedDao.withdrawETHByCrowdFunding(crowdfundingId);
+        vm.expectRevert("You are not the crowdfunding initiator");
+        upgradedDao.withdrawETHByCrowdfunding(crowdfundingId);
         vm.stopPrank();
     }
+
+    function testCrowdfundingERC20() public {}
 
     function testWithdrawNFTByOwner() public {
         vm.startPrank(founderB);
