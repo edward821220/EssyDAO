@@ -137,6 +137,33 @@ contract VaultTest is BasicSetup {
         vm.stopPrank();
     }
 
+    function testWithdrawETHByProposal() public {
+        vm.startPrank(founderA);
+        vm.expectRevert("Only executeProposal function can call this function");
+        upgradedDao.wtihdrawETHByProposal(founderB, 88 ether);
+
+        bytes memory data = abi.encodeWithSelector(vaultFacet.wtihdrawETHByProposal.selector, founderB, 88 ether);
+        uint256 proposalId = dao.createProposal(data);
+        dao.vote(proposalId, Side.Yes);
+        vm.stopPrank();
+
+        vm.startPrank(founderB);
+        dao.vote(proposalId, Side.Yes);
+        vm.expectRevert("There is no spare ETH to withdraw");
+        dao.executeProposal(proposalId);
+
+        deal(address(upgradedDao), 66 ether);
+        vm.expectRevert("Insufficient withdrawable ETH");
+        dao.executeProposal(proposalId);
+
+        deal(address(upgradedDao), 88 ether);
+        uint256 balanceBefore = founderB.balance;
+        dao.executeProposal(proposalId);
+        assertEq(founderB.balance, balanceBefore + 88 ether);
+
+        vm.stopPrank();
+    }
+
     function testWithdrawNFTByOwner() public {
         vm.startPrank(founderB);
 

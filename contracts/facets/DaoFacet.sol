@@ -43,8 +43,9 @@ contract DaoFacet is IERC20, IERC20Metadata, IERC20Errors {
         Proposal storage proposal = s.proposals[proposalId - 1];
         require(proposal.status == Status.Approved, "Proposal is not approved");
         require(proposal.data.length > 0, "No data to execute");
-        (bool success,) = s.diamond.call{value: msg.value}(proposal.data);
-        require(success, "Failed to execute");
+
+        (bool success, bytes memory data) = s.diamond.call{value: msg.value}(proposal.data);
+        require(success, _getRevertMsg(data));
         proposal.status = Status.Finished;
     }
 
@@ -281,5 +282,13 @@ contract DaoFacet is IERC20, IERC20Metadata, IERC20Errors {
         } else {
             return ids[ids.length - 1];
         }
+    }
+
+    function _getRevertMsg(bytes memory _returnData) private pure returns (string memory) {
+        if (_returnData.length < 68) return "Failed to execute";
+        assembly {
+            _returnData := add(_returnData, 0x04)
+        }
+        return abi.decode(_returnData, (string)); // All that remains is the revert string
     }
 }
