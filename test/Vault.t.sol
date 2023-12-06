@@ -22,15 +22,16 @@ contract VaultTest is BasicSetup {
         vm.startPrank(founderA);
         IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](1);
 
-        bytes4[] memory vaultCutSelectors = new bytes4[](8);
-        vaultCutSelectors[0] = vaultFacet.checkCrowdfundingInfo.selector;
-        vaultCutSelectors[1] = vaultFacet.createCrowdfundingETH.selector;
-        vaultCutSelectors[2] = vaultFacet.contributeETH.selector;
-        vaultCutSelectors[3] = vaultFacet.withdrawETHByCrowdFunding.selector;
-        vaultCutSelectors[4] = vaultFacet.wtihdrawETHByProposal.selector;
-        vaultCutSelectors[5] = vaultFacet.createCrowdfundingERC20.selector;
-        vaultCutSelectors[6] = vaultFacet.onERC721Received.selector;
-        vaultCutSelectors[7] = vaultFacet.withdrawNFTByOwner.selector;
+        bytes4[] memory vaultCutSelectors = new bytes4[](9);
+        vaultCutSelectors[0] = vaultFacet.checkCrowdfundingInfos.selector;
+        vaultCutSelectors[1] = vaultFacet.checkCrowdfundingInfo.selector;
+        vaultCutSelectors[2] = vaultFacet.createCrowdfundingETH.selector;
+        vaultCutSelectors[3] = vaultFacet.contributeETH.selector;
+        vaultCutSelectors[4] = vaultFacet.withdrawETHByCrowdFunding.selector;
+        vaultCutSelectors[5] = vaultFacet.wtihdrawETHByProposal.selector;
+        vaultCutSelectors[6] = vaultFacet.createCrowdfundingERC20.selector;
+        vaultCutSelectors[7] = vaultFacet.onERC721Received.selector;
+        vaultCutSelectors[8] = vaultFacet.withdrawNFTByOwner.selector;
 
         cut[0] = IDiamondCut.FacetCut({
             facetAddress: address(vaultFacet),
@@ -80,6 +81,9 @@ contract VaultTest is BasicSetup {
         vm.startPrank(founderB);
         upgradedDao.withdrawETHByCrowdFunding(crowdfundingId);
         assertEq(founderB.balance, initiatorBalanceBefore + 88 ether);
+
+        vm.expectRevert("Already withdrawn");
+        upgradedDao.withdrawETHByCrowdFunding(crowdfundingId);
         vm.stopPrank();
 
         vm.startPrank(bob);

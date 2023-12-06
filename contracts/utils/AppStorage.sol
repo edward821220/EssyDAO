@@ -58,6 +58,7 @@ struct CrowdfundingInfo {
     address token;
     uint256 targetAmount;
     uint256 currentAmount;
+    uint256 withdrawnAmount;
 }
 
 struct AppStorage {

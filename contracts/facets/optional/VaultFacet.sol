@@ -11,13 +11,9 @@ contract VaultFacet is IERC721Receiver {
 
     address public constant ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
-    function checkCrowdfundingInfo(uint256 crowdfundingId) external view returns (CrowdfundingInfo memory) {
-        return s.crowdfundingInfos[crowdfundingId];
-    }
-
     function createCrowdfundingETH(string calldata title, uint256 amount) external returns (uint256) {
         require(s.balances[msg.sender] > 0, "You are not the member of the DAO");
-        s.crowdfundingInfos.push(CrowdfundingInfo(msg.sender, title, ETH, amount, 0));
+        s.crowdfundingInfos.push(CrowdfundingInfo(msg.sender, title, ETH, amount, 0, 0));
         return s.crowdfundingInfos.length - 1;
     }
 
@@ -27,11 +23,15 @@ contract VaultFacet is IERC721Receiver {
     }
 
     function withdrawETHByCrowdFunding(uint256 crowdfundingId) external {
-        require(
-            msg.sender == s.crowdfundingInfos[crowdfundingId].crowdfundingInitiator,
-            "You are not the crowd funding initiator"
-        );
-        uint256 amount = s.crowdfundingInfos[crowdfundingId].currentAmount;
+        CrowdfundingInfo memory crowdfundingInfo = checkCrowdfundingInfo(crowdfundingId);
+
+        require(msg.sender == crowdfundingInfo.crowdfundingInitiator, "You are not the crowd funding initiator");
+
+        uint256 amount = crowdfundingInfo.currentAmount - crowdfundingInfo.withdrawnAmount;
+        require(amount > 0, "Already withdrawn");
+
+        crowdfundingInfo.withdrawnAmount += amount;
+        s.crowdfundingInfos[crowdfundingId] = crowdfundingInfo;
         payable(msg.sender).transfer(amount);
     }
 
@@ -42,7 +42,7 @@ contract VaultFacet is IERC721Receiver {
 
     function createCrowdfundingERC20(string calldata title, address token, uint256 amount) external returns (uint256) {
         require(s.balances[msg.sender] > 0, "You are not the member of the DAO");
-        s.crowdfundingInfos.push(CrowdfundingInfo(msg.sender, title, token, amount, 0));
+        s.crowdfundingInfos.push(CrowdfundingInfo(msg.sender, title, token, amount, 0, 0));
         return s.crowdfundingInfos.length - 1;
     }
 
@@ -59,6 +59,15 @@ contract VaultFacet is IERC721Receiver {
 
     function withdrawNFTByOwner(address NFTContract, uint256 tokenId) external {
         require(s.NFTOwners[msg.sender][NFTContract][tokenId], "NFT not owned by sender");
+        s.NFTOwners[msg.sender][NFTContract][tokenId] = false;
         IERC721(NFTContract).safeTransferFrom(address(this), msg.sender, tokenId);
+    }
+
+    function checkCrowdfundingInfos() public view returns (CrowdfundingInfo[] memory) {
+        return s.crowdfundingInfos;
+    }
+
+    function checkCrowdfundingInfo(uint256 crowdfundingId) public view returns (CrowdfundingInfo memory) {
+        return s.crowdfundingInfos[crowdfundingId];
     }
 }
