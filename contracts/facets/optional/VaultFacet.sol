@@ -9,15 +9,21 @@ import {AppStorage, CrowdfundingInfo} from "../../utils/AppStorage.sol";
 contract VaultFacet is IERC721Receiver {
     AppStorage s;
 
+    address public constant ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+
+    function checkCrowdfundingInfo(uint256 crowdfundingId) external view returns (CrowdfundingInfo memory) {
+        return s.crowdfundingInfos[crowdfundingId];
+    }
+
     function createCrowdfundingETH(string calldata title, uint256 amount) external returns (uint256) {
         require(s.balances[msg.sender] > 0, "You are not the member of the DAO");
-        s.crowdfundingInfos.push(CrowdfundingInfo({crowdfundingInitiator: msg.sender, title: title, amount: amount}));
-        return s.crowdfundingInfos.length;
+        s.crowdfundingInfos.push(CrowdfundingInfo(msg.sender, title, ETH, amount, 0));
+        return s.crowdfundingInfos.length - 1;
     }
 
     function contributeETH(uint256 crowdfundingId) external payable {
         require(msg.value > 0, "Contribution amount must be greater than 0");
-        s.crowdfundingInfos[crowdfundingId].amount += msg.value;
+        s.crowdfundingInfos[crowdfundingId].currentAmount += msg.value;
     }
 
     function withdrawETHByCrowdFunding(uint256 crowdfundingId) external {
@@ -25,13 +31,19 @@ contract VaultFacet is IERC721Receiver {
             msg.sender == s.crowdfundingInfos[crowdfundingId].crowdfundingInitiator,
             "You are not the crowd funding initiator"
         );
-        uint256 amount = s.crowdfundingInfos[crowdfundingId].amount;
+        uint256 amount = s.crowdfundingInfos[crowdfundingId].currentAmount;
         payable(msg.sender).transfer(amount);
     }
 
     function wtihdrawETHByProposal(address to, uint256 amount) external {
         require(msg.sender == s.diamond, "Only executeProposal function can call this function");
         payable(to).transfer(amount);
+    }
+
+    function createCrowdfundingERC20(string calldata title, address token, uint256 amount) external returns (uint256) {
+        require(s.balances[msg.sender] > 0, "You are not the member of the DAO");
+        s.crowdfundingInfos.push(CrowdfundingInfo(msg.sender, title, token, amount, 0));
+        return s.crowdfundingInfos.length - 1;
     }
 
     function withdrawERC20ByProposal(address to, address ERC20Contract, uint256 amount) external {

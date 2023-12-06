@@ -22,9 +22,15 @@ contract VaultTest is BasicSetup {
         vm.startPrank(founderA);
         IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](1);
 
-        bytes4[] memory vaultCutSelectors = new bytes4[](2);
-        vaultCutSelectors[0] = vaultFacet.onERC721Received.selector;
-        vaultCutSelectors[1] = vaultFacet.withdrawNFTByOwner.selector;
+        bytes4[] memory vaultCutSelectors = new bytes4[](8);
+        vaultCutSelectors[0] = vaultFacet.checkCrowdfundingInfo.selector;
+        vaultCutSelectors[1] = vaultFacet.createCrowdfundingETH.selector;
+        vaultCutSelectors[2] = vaultFacet.contributeETH.selector;
+        vaultCutSelectors[3] = vaultFacet.withdrawETHByCrowdFunding.selector;
+        vaultCutSelectors[4] = vaultFacet.wtihdrawETHByProposal.selector;
+        vaultCutSelectors[5] = vaultFacet.createCrowdfundingERC20.selector;
+        vaultCutSelectors[6] = vaultFacet.onERC721Received.selector;
+        vaultCutSelectors[7] = vaultFacet.withdrawNFTByOwner.selector;
 
         cut[0] = IDiamondCut.FacetCut({
             facetAddress: address(vaultFacet),
@@ -47,6 +53,38 @@ contract VaultTest is BasicSetup {
         dao.vote(proposalId, Side.Yes);
         dao.executeProposal{value: 0.006 ether}(proposalId);
         upgradedDao = VaultFacet(daoDiamond);
+        vm.stopPrank();
+    }
+
+    function testCrowdfundingETH() public {
+        vm.startPrank(alice);
+        vm.expectRevert("You are not the member of the DAO");
+        upgradedDao.createCrowdfundingETH("Donate me", 100 ether);
+        vm.stopPrank();
+
+        vm.startPrank(founderB);
+        uint256 crowdfundingId = upgradedDao.createCrowdfundingETH("Facilitating organizational growth", 8888 ether);
+        assertEq(upgradedDao.checkCrowdfundingInfo(crowdfundingId).title, "Facilitating organizational growth");
+        assertEq(upgradedDao.checkCrowdfundingInfo(crowdfundingId).targetAmount, 8888 ether);
+        vm.stopPrank();
+
+        vm.startPrank(founderC);
+        vm.expectRevert("Contribution amount must be greater than 0");
+        upgradedDao.contributeETH(crowdfundingId);
+
+        uint256 initiatorBalanceBefore = founderB.balance;
+        upgradedDao.contributeETH{value: 88 ether}(crowdfundingId);
+        assertEq(upgradedDao.checkCrowdfundingInfo(crowdfundingId).currentAmount, 88 ether);
+        vm.stopPrank();
+
+        vm.startPrank(founderB);
+        upgradedDao.withdrawETHByCrowdFunding(crowdfundingId);
+        assertEq(founderB.balance, initiatorBalanceBefore + 88 ether);
+        vm.stopPrank();
+
+        vm.startPrank(bob);
+        vm.expectRevert("You are not the crowd funding initiator");
+        upgradedDao.withdrawETHByCrowdFunding(crowdfundingId);
         vm.stopPrank();
     }
 

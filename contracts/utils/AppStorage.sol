@@ -55,7 +55,9 @@ struct Dividend {
 struct CrowdfundingInfo {
     address crowdfundingInitiator;
     string title;
-    uint256 amount;
+    address token;
+    uint256 targetAmount;
+    uint256 currentAmount;
 }
 
 struct AppStorage {
