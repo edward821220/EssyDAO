@@ -22,7 +22,7 @@ contract VaultTest is BasicSetup {
         vm.startPrank(founderA);
         IDiamondCut.FacetCut[] memory cut = new IDiamondCut.FacetCut[](1);
 
-        bytes4[] memory vaultCutSelectors = new bytes4[](11);
+        bytes4[] memory vaultCutSelectors = new bytes4[](12);
         vaultCutSelectors[0] = vaultFacet.createCrowdfundingETH.selector;
         vaultCutSelectors[1] = vaultFacet.contributeETH.selector;
         vaultCutSelectors[2] = vaultFacet.withdrawETHByCrowdfunding.selector;
@@ -30,10 +30,11 @@ contract VaultTest is BasicSetup {
         vaultCutSelectors[4] = vaultFacet.createCrowdfundingERC20.selector;
         vaultCutSelectors[5] = vaultFacet.contributeERC20.selector;
         vaultCutSelectors[6] = vaultFacet.withdrawERC20ByCrowdfunding.selector;
-        vaultCutSelectors[7] = vaultFacet.onERC721Received.selector;
-        vaultCutSelectors[8] = vaultFacet.withdrawNFTByOwner.selector;
-        vaultCutSelectors[9] = vaultFacet.checkCrowdfundingInfos.selector;
-        vaultCutSelectors[10] = vaultFacet.checkCrowdfundingInfo.selector;
+        vaultCutSelectors[7] = vaultFacet.withdrawERC20ByProposal.selector;
+        vaultCutSelectors[8] = vaultFacet.onERC721Received.selector;
+        vaultCutSelectors[9] = vaultFacet.withdrawNFTByOwner.selector;
+        vaultCutSelectors[10] = vaultFacet.checkCrowdfundingInfos.selector;
+        vaultCutSelectors[11] = vaultFacet.checkCrowdfundingInfo.selector;
 
         cut[0] = IDiamondCut.FacetCut({
             facetAddress: address(vaultFacet),
@@ -160,6 +161,36 @@ contract VaultTest is BasicSetup {
         uint256 balanceBefore = founderB.balance;
         dao.executeProposal(proposalId);
         assertEq(founderB.balance, balanceBefore + 88 ether);
+
+        vm.stopPrank();
+    }
+
+    function testWithdrawERC20ByProposal() public {
+        BearToken token = new BearToken();
+
+        vm.startPrank(founderA);
+        vm.expectRevert("Only executeProposal function can call this function");
+        upgradedDao.withdrawERC20ByProposal(founderB, address(token), 88 ether);
+
+        bytes memory data =
+            abi.encodeWithSelector(vaultFacet.withdrawERC20ByProposal.selector, founderB, address(token), 88 ether);
+        uint256 proposalId = dao.createProposal(data);
+        dao.vote(proposalId, Side.Yes);
+        vm.stopPrank();
+
+        vm.startPrank(founderB);
+        dao.vote(proposalId, Side.Yes);
+        vm.expectRevert("There is no spare tokens to withdraw");
+        dao.executeProposal(proposalId);
+
+        deal(address(token), address(upgradedDao), 66 ether);
+        vm.expectRevert("Insufficient withdrawable tokens");
+        dao.executeProposal(proposalId);
+
+        deal(address(token), address(upgradedDao), 88 ether);
+        uint256 balanceBefore = token.balanceOf(founderB);
+        dao.executeProposal(proposalId);
+        assertEq(token.balanceOf(founderB), balanceBefore + 88 ether);
 
         vm.stopPrank();
     }
