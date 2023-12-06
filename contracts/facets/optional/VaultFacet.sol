@@ -43,6 +43,7 @@ contract VaultFacet is IERC721Receiver {
     }
 
     function contributeERC20(uint256 crowdfundingId, uint256 amount) external {
+        require(amount > 0, "Contribution amount must be greater than 0");
         CrowdfundingInfo memory crowdfundingInfo = checkCrowdfundingInfo(crowdfundingId);
         address token = crowdfundingInfo.token;
         require(IERC20(token).balanceOf(msg.sender) >= amount, "You don't have enough tokens");

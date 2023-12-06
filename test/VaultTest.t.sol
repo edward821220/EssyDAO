@@ -77,12 +77,13 @@ contract VaultTest is BasicSetup {
 
         uint256 initiatorBalanceBefore = founderB.balance;
         upgradedDao.contributeETH{value: 88 ether}(crowdfundingId);
-        assertEq(upgradedDao.checkCrowdfundingInfo(crowdfundingId).currentAmount, 88 ether);
+        uint256 currentAmount = upgradedDao.checkCrowdfundingInfo(crowdfundingId).currentAmount;
+        assertEq(currentAmount, 88 ether);
         vm.stopPrank();
 
         vm.startPrank(founderB);
         upgradedDao.withdrawETHByCrowdfunding(crowdfundingId);
-        assertEq(founderB.balance, initiatorBalanceBefore + 88 ether);
+        assertEq(founderB.balance, initiatorBalanceBefore + currentAmount);
 
         vm.expectRevert("Already withdrawn");
         upgradedDao.withdrawETHByCrowdfunding(crowdfundingId);
@@ -113,17 +114,18 @@ contract VaultTest is BasicSetup {
         deal(address(token), founderC, 88 ether);
         vm.startPrank(founderC);
         vm.expectRevert("Contribution amount must be greater than 0");
-        upgradedDao.contributeETH(crowdfundingId);
+        upgradedDao.contributeERC20(crowdfundingId, 0);
 
         uint256 initiatorBalanceBefore = token.balanceOf(founderB);
         token.approve(address(upgradedDao), type(uint256).max);
         upgradedDao.contributeERC20(crowdfundingId, 88 ether);
-        assertEq(upgradedDao.checkCrowdfundingInfo(crowdfundingId).currentAmount, 88 ether);
+        uint256 currentAmount = upgradedDao.checkCrowdfundingInfo(crowdfundingId).currentAmount;
+        assertEq(currentAmount, 88 ether);
         vm.stopPrank();
 
         vm.startPrank(founderB);
         upgradedDao.withdrawERC20ByCrowdfunding(crowdfundingId);
-        assertEq(token.balanceOf(founderB), initiatorBalanceBefore + 88 ether);
+        assertEq(token.balanceOf(founderB), initiatorBalanceBefore + currentAmount);
 
         vm.expectRevert("Already withdrawn");
         upgradedDao.withdrawERC20ByCrowdfunding(crowdfundingId);
