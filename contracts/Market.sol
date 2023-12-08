@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 contract Market is ReentrancyGuard {
@@ -11,14 +11,23 @@ contract Market is ReentrancyGuard {
         uint256 highestBid;
         uint256 startPrice;
         uint256 endTime;
-        IERC20 token;
+        ERC20 token;
         uint256 tokenAmount;
         bool ended;
+    }
+
+    struct FixedSale {
+        address seller;
+        uint256 pricePerToken;
+        ERC20 token;
+        uint256 tokenAmount;
+        uint256 soldAmount;
     }
 
     uint256 constant AUCTION_DURATION = 7 days;
 
     mapping(address token => Auction[]) public auctions;
+    mapping(address token => FixedSale[]) public fixedSales;
 
     event AuctionCreated(
         uint256 indexed auctionId,
@@ -33,10 +42,16 @@ contract Market is ReentrancyGuard {
 
     event AuctionEnded(uint256 indexed auctionId, address winner, uint256 highestBid);
 
+    event FixedSaleCreated(
+        uint256 indexed saleId, address indexed seller, address indexed tokenAddress, uint256 tokenAmount, uint256 price
+    );
+
+    event FixedSaleCompleted(uint256 indexed saleId, address indexed buyer, uint256 amount);
+
     function createAuction(address tokenAddress_, uint256 tokenAmount_, uint256 startPrice_) external {
         require(tokenAmount_ > 0, "Token amount must be greater than zero");
 
-        IERC20 token_ = IERC20(tokenAddress_);
+        ERC20 token_ = ERC20(tokenAddress_);
         require(token_.transferFrom(msg.sender, address(this), tokenAmount_), "Token transfer failed");
 
         auctions[tokenAddress_].push(
@@ -94,5 +109,42 @@ contract Market is ReentrancyGuard {
         }
 
         emit AuctionEnded(auctionId_, auction.highestBidder, auction.highestBid);
+    }
+
+    function createFixedSale(address tokenAddress_, uint256 tokenAmount_, uint256 pricePerToken_)
+        external
+        returns (uint256 saleId)
+    {
+        fixedSales[tokenAddress_].push(
+            FixedSale({
+                seller: msg.sender,
+                pricePerToken: pricePerToken_,
+                token: ERC20(tokenAddress_),
+                tokenAmount: tokenAmount_,
+                soldAmount: 0
+            })
+        );
+
+        require(ERC20(tokenAddress_).transferFrom(msg.sender, address(this), tokenAmount_), "Token transfer failed");
+
+        emit FixedSaleCreated(fixedSales[tokenAddress_].length, msg.sender, tokenAddress_, tokenAmount_, pricePerToken_);
+
+        return fixedSales[tokenAddress_].length;
+    }
+
+    function buyFixedSale(address tokenAddress_, uint256 saleId_, uint256 tokenAmount_) external payable nonReentrant {
+        FixedSale storage sale = fixedSales[tokenAddress_][saleId_ - 1];
+        require(sale.soldAmount + tokenAmount_ <= sale.tokenAmount, "No enough tokens left");
+        require(
+            msg.value == sale.pricePerToken * tokenAmount_ * (10 ** uint256(ERC20(tokenAddress_).decimals())),
+            "Incorrect value"
+        );
+
+        sale.soldAmount += tokenAmount_;
+
+        require(sale.token.transfer(msg.sender, sale.tokenAmount), "Token transfer failed");
+        payable(sale.seller).transfer(msg.value);
+
+        emit FixedSaleCompleted(saleId_, msg.sender, tokenAmount_);
     }
 }
