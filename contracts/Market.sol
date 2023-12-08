@@ -32,15 +32,15 @@ contract Market is ReentrancyGuard {
     event AuctionCreated(
         uint256 indexed auctionId,
         address indexed seller,
-        address tokenAddress,
+        address indexed tokenAddress,
         uint256 tokenAmount,
         uint256 startPrice,
         uint256 endTime
     );
 
-    event BidPlaced(uint256 indexed auctionId, address indexed bidder, uint256 bid);
+    event Bid(uint256 indexed auctionId, address indexed bidder, uint256 indexed bid);
 
-    event AuctionEnded(uint256 indexed auctionId, address winner, uint256 highestBid);
+    event AuctionEnded(uint256 indexed auctionId, address indexed winner, uint256 indexed highestBid);
 
     event FixedSaleCreated(
         uint256 indexed saleId, address indexed seller, address indexed tokenAddress, uint256 tokenAmount, uint256 price
@@ -48,7 +48,10 @@ contract Market is ReentrancyGuard {
 
     event FixedSaleCompleted(uint256 indexed saleId, address indexed buyer, uint256 amount);
 
-    function createAuction(address tokenAddress_, uint256 tokenAmount_, uint256 startPrice_) external {
+    function createAuction(address tokenAddress_, uint256 tokenAmount_, uint256 startPrice_)
+        external
+        returns (uint256 auctionId)
+    {
         require(tokenAmount_ > 0, "Token amount must be greater than zero");
 
         ERC20 token_ = ERC20(tokenAddress_);
@@ -75,6 +78,8 @@ contract Market is ReentrancyGuard {
             startPrice_,
             block.timestamp + AUCTION_DURATION
         );
+
+        return auctions[tokenAddress_].length;
     }
 
     function bid(address tokenAddress_, uint256 auctionId_) external payable nonReentrant {
@@ -90,7 +95,7 @@ contract Market is ReentrancyGuard {
         auction.highestBidder = msg.sender;
         auction.highestBid = msg.value;
 
-        emit BidPlaced(auctionId_, msg.sender, msg.value);
+        emit Bid(auctionId_, msg.sender, msg.value);
     }
 
     function endAuction(address tokenAddress_, uint256 auctionId_) external nonReentrant {
