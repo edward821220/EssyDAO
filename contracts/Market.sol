@@ -48,6 +48,7 @@ contract Market is ReentrancyGuard {
 
     event FixedSaleCompleted(uint256 indexed saleId, address indexed buyer, uint256 amount);
 
+    // Auction
     function createAuction(address tokenAddress_, uint256 tokenAmount_, uint256 startPrice_)
         external
         returns (uint256 auctionId)
@@ -116,6 +117,15 @@ contract Market is ReentrancyGuard {
         emit AuctionEnded(auctionId_, auction.highestBidder, auction.highestBid);
     }
 
+    function checkAuctions(address tokenAddress) external view returns (Auction[] memory) {
+        return auctions[tokenAddress];
+    }
+
+    function checkAuction(address tokenAddress, uint256 auctionId) external view returns (Auction memory) {
+        return auctions[tokenAddress][auctionId - 1];
+    }
+
+    // Fixed Sale
     function createFixedSale(address tokenAddress_, uint256 tokenAmount_, uint256 pricePerToken_)
         external
         returns (uint256 saleId)

@@ -43,8 +43,13 @@ contract MarketTest is Test {
     }
 
     function testCreateAuction() public {
-        _createAuction();
+        uint256 auctionId = _createAuction();
         assertEq(token.balanceOf(seller), 0);
+        assertEq(market.checkAuction(address(token), auctionId).startPrice, 0.0008 ether);
+        assertEq(market.checkAuction(address(token), auctionId).endTime, block.timestamp + AUCTION_DURATION);
+        assertEq(market.checkAuction(address(token), auctionId).seller, seller);
+        assertEq(market.checkAuction(address(token), auctionId).highestBidder, address(0));
+        assertEq(market.checkAuction(address(token), auctionId).highestBid, 0.0008 ether);
     }
 
     function testBid() public {
@@ -66,6 +71,14 @@ contract MarketTest is Test {
         vm.expectEmit(true, true, true, true);
         emit Bid(auctionId, buyer2, 0.002 ether);
         market.bid{value: 0.002 ether}(address(token), auctionId);
+
+        vm.warp(block.timestamp + AUCTION_DURATION);
+        vm.expectRevert("Auction already ended");
+        market.bid{value: 0.005 ether}(address(token), auctionId);
+
+        assertEq(market.checkAuction(address(token), auctionId).highestBid, 0.002 ether);
+        assertEq(market.checkAuction(address(token), auctionId).highestBidder, buyer2);
+
         vm.stopPrank();
     }
 
