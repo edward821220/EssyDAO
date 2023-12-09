@@ -162,4 +162,12 @@ contract Market is ReentrancyGuard {
 
         emit FixedSaleCompleted(saleId_, msg.sender, tokenAmount_);
     }
+
+    function checkFixedSales(address tokenAddress) external view returns (FixedSale[] memory) {
+        return fixedSales[tokenAddress];
+    }
+
+    function checkFixedSale(address tokenAddress, uint256 auctionId) external view returns (FixedSale memory) {
+        return fixedSales[tokenAddress][auctionId - 1];
+    }
 }

@@ -29,6 +29,12 @@ contract MarketTest is Test {
 
     event AuctionEnded(uint256 indexed auctionId, address indexed winner, uint256 indexed highestBid);
 
+    event FixedSaleCreated(
+        uint256 indexed saleId, address indexed seller, address indexed tokenAddress, uint256 tokenAmount, uint256 price
+    );
+
+    event FixedSaleCompleted(uint256 indexed saleId, address indexed buyer, uint256 amount);
+
     function setUp() public {
         vm.startPrank(admin);
         market = new Market();
@@ -44,6 +50,7 @@ contract MarketTest is Test {
 
     function testCreateAuction() public {
         uint256 auctionId = _createAuction();
+
         assertEq(token.balanceOf(seller), 0);
         assertEq(market.checkAuction(address(token), auctionId).startPrice, 0.0008 ether);
         assertEq(market.checkAuction(address(token), auctionId).endTime, block.timestamp + AUCTION_DURATION);
@@ -118,6 +125,17 @@ contract MarketTest is Test {
         vm.stopPrank();
     }
 
+    function testCreateFixedSale() public {
+        uint256 auctionId = _createFixedSale();
+
+        assertEq(token.balanceOf(seller), 0);
+        assertEq(market.checkFixedSale(address(token), auctionId).pricePerToken, 100 gwei);
+        assertEq(market.checkFixedSale(address(token), auctionId).seller, seller);
+        assertEq(address(market.checkFixedSale(address(token), auctionId).token), address(token));
+        assertEq(market.checkFixedSale(address(token), auctionId).tokenAmount, 8888 ether);
+        assertEq(market.checkFixedSale(address(token), auctionId).soldAmount, 0);
+    }
+
     function _createAuction() private returns (uint256 auctionId) {
         vm.startPrank(seller);
         token.approve(address(market), type(uint256).max);
@@ -126,6 +144,15 @@ contract MarketTest is Test {
             1, seller, address(token), token.balanceOf(seller), 0.0008 ether, block.timestamp + AUCTION_DURATION
         );
         auctionId = market.createAuction(address(token), token.balanceOf(seller), 0.0008 ether);
+        vm.stopPrank();
+    }
+
+    function _createFixedSale() private returns (uint256 auctionId) {
+        vm.startPrank(seller);
+        token.approve(address(market), type(uint256).max);
+        vm.expectEmit(true, true, true, true);
+        emit FixedSaleCreated(1, seller, address(token), token.balanceOf(seller), 100 gwei);
+        auctionId = market.createFixedSale(address(token), token.balanceOf(seller), 100 gwei);
         vm.stopPrank();
     }
 }
