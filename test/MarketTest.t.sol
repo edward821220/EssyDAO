@@ -82,6 +82,42 @@ contract MarketTest is Test {
         vm.stopPrank();
     }
 
+    function testEndAuctionWithBuyer() public {
+        uint256 auctionId = _createAuction();
+
+        vm.startPrank(buyer1);
+
+        market.bid{value: 0.001 ether}(address(token), auctionId);
+
+        vm.expectRevert("Auction not yet ended");
+        market.endAuction(address(token), auctionId);
+
+        vm.warp(block.timestamp + AUCTION_DURATION);
+        vm.expectEmit(true, true, true, true);
+        emit AuctionEnded(auctionId, buyer1, 0.001 ether);
+        market.endAuction(address(token), auctionId);
+        assertEq(token.balanceOf(buyer1), 8888 ether);
+
+        vm.expectRevert("Auction end already called");
+        market.endAuction(address(token), auctionId);
+
+        vm.stopPrank();
+    }
+
+    function testEndAuctionWithoutBuyer() public {
+        uint256 auctionId = _createAuction();
+
+        vm.startPrank(seller);
+
+        vm.warp(block.timestamp + AUCTION_DURATION);
+        vm.expectEmit(true, true, true, true);
+        emit AuctionEnded(auctionId, address(0), 0.0008 ether);
+        market.endAuction(address(token), auctionId);
+        assertEq(token.balanceOf(seller), 8888 ether);
+
+        vm.stopPrank();
+    }
+
     function _createAuction() private returns (uint256 auctionId) {
         vm.startPrank(seller);
         token.approve(address(market), type(uint256).max);
