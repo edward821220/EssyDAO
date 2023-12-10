@@ -54,6 +54,13 @@ contract DiamondCutTest is SetUp {
         assertEq(address(factory).balance, 0.006 ether);
         assertEq(upgradedDao.owner(), founderB);
         assertEq(uint256(dao.checkProposal(proposalId).status), uint256(Status.Finished));
+
+        vm.startPrank(founderB);
+        vm.expectEmit(true, true, true, true);
+        emit OwnershipTransferred(founderB, founderC);
+        upgradedDao.transferOwnership(founderC);
+        assertEq(upgradedDao.owner(), founderC);
+        vm.stopPrank();
     }
 
     // Remove ownership facet to test
