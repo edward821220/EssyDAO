@@ -2,11 +2,11 @@
 pragma solidity ^0.8.0;
 
 import {Test, console2} from "forge-std/Test.sol";
-import {BasicSetup} from "./helper/BasicSetup.sol";
+import {SetUp} from "./helper/SetUp.sol";
 import {Diamond} from "../contracts/Diamond.sol";
 import {DaoFacet} from "../contracts/facets/DaoFacet.sol";
 
-contract FactoryTest is BasicSetup {
+contract FactoryTest is SetUp {
     event DAOCreated(address indexed daoAddress, address indexed founder, string indexed daoName);
 
     error OwnableUnauthorizedAccount(address account);

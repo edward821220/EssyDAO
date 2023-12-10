@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {BasicSetup} from "./helper/BasicSetup.sol";
+import {SetUp} from "./helper/SetUp.sol";
 import {DaoFacet} from "../contracts/facets/DaoFacet.sol";
 import {Proposal, Side, Status, Receiver} from "../contracts/utils/AppStorage.sol";
 
-contract DaoTest is BasicSetup {
+contract DaoTest is SetUp {
     function setUp() public override {
         super.setUp();
     }

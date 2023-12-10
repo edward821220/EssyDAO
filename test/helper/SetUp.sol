@@ -15,7 +15,7 @@ import {VaultFacet} from "../../contracts/facets/optional/VaultFacet.sol";
 import {VaultInit} from "../../contracts/upgradeInitializers/VaultInit.sol";
 import {AppStorage, FounderInfo} from "../../contracts/utils/AppStorage.sol";
 
-contract BasicSetup is Test {
+contract SetUp is Test {
     AppStorage internal s;
     DiamondFactory internal factory;
     DiamondCutFacet internal diamondCutFacet;

@@ -2,14 +2,14 @@
 pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
-import {BasicSetup} from "./helper/BasicSetup.sol";
+import {SetUp} from "./helper/SetUp.sol";
 import {BearNFT, BearToken} from "./helper/Tokens.sol";
 import {IDiamondCut} from "../contracts/interfaces/IDiamondCut.sol";
 import {DaoFacet} from "../contracts/facets/DaoFacet.sol";
 import {VaultFacet} from "../contracts/facets/optional/VaultFacet.sol";
 import {Side} from "../contracts/utils/AppStorage.sol";
 
-contract VaultTest is BasicSetup {
+contract VaultTest is SetUp {
     DaoFacet dao;
     VaultFacet upgradedDao;
 

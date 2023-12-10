@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {BasicSetup} from "./helper/BasicSetup.sol";
+import {SetUp} from "./helper/SetUp.sol";
 import {IDiamondCut} from "../contracts/interfaces/IDiamondCut.sol";
 import {DaoFacet} from "../contracts/facets/DaoFacet.sol";
 import {DividendFacet} from "../contracts/facets/optional/DividendFacet.sol";
 import {Side} from "../contracts/utils/AppStorage.sol";
 
-contract DividendTest is BasicSetup {
+contract DividendTest is SetUp {
     event Transfer(address indexed from, address indexed to, uint256 value);
 
     function setUp() public override {

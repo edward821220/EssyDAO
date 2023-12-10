@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {BasicSetup} from "./helper/BasicSetup.sol";
+import {SetUp} from "./helper/SetUp.sol";
 import {IDiamondCut} from "../contracts/interfaces/IDiamondCut.sol";
 import {DaoFacet} from "../contracts/facets/DaoFacet.sol";
 import {OwnershipFacet} from "../contracts/facets/optional/OwnershipFacet.sol";
 import {Side, Status} from "../contracts/utils/AppStorage.sol";
 
-contract DiamondCutTest is BasicSetup {
+contract DiamondCutTest is SetUp {
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
     function setUp() public override {
