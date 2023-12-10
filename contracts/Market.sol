@@ -24,8 +24,6 @@ contract Market is ReentrancyGuard {
         uint256 soldAmount;
     }
 
-    uint256 constant AUCTION_DURATION = 7 days;
-
     mapping(address token => Auction[]) public auctions;
     mapping(address token => FixedSale[]) public fixedSales;
 
@@ -49,7 +47,7 @@ contract Market is ReentrancyGuard {
     event FixedSaleCompleted(uint256 indexed saleId, address indexed buyer, uint256 amount);
 
     // Auction
-    function createAuction(address tokenAddress_, uint256 tokenAmount_, uint256 startPrice_)
+    function createAuction(address tokenAddress_, uint256 tokenAmount_, uint256 startPrice_, uint256 duration)
         external
         returns (uint256 auctionId)
     {
@@ -64,7 +62,7 @@ contract Market is ReentrancyGuard {
                 highestBidder: address(0),
                 highestBid: startPrice_,
                 startPrice: startPrice_,
-                endTime: block.timestamp + AUCTION_DURATION,
+                endTime: block.timestamp + duration,
                 token: token_,
                 tokenAmount: tokenAmount_,
                 ended: false
@@ -77,7 +75,7 @@ contract Market is ReentrancyGuard {
             tokenAddress_,
             tokenAmount_,
             startPrice_,
-            block.timestamp + AUCTION_DURATION
+            block.timestamp + duration
         );
 
         return auctions[tokenAddress_].length;

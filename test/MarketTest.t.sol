@@ -167,7 +167,7 @@ contract MarketTest is Test {
         emit AuctionCreated(
             1, seller, address(token), token.balanceOf(seller), 0.0008 ether, block.timestamp + AUCTION_DURATION
         );
-        auctionId = market.createAuction(address(token), token.balanceOf(seller), 0.0008 ether);
+        auctionId = market.createAuction(address(token), token.balanceOf(seller), 0.0008 ether, 7 days);
         vm.stopPrank();
     }
 
