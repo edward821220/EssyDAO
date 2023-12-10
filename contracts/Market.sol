@@ -56,7 +56,7 @@ contract Market is ReentrancyGuard {
         require(tokenAmount_ > 0, "Token amount must be greater than zero");
 
         ERC20 token_ = ERC20(tokenAddress_);
-        require(token_.transferFrom(msg.sender, address(this), tokenAmount_), "Token transfer failed");
+        token_.transferFrom(msg.sender, address(this), tokenAmount_);
 
         auctions[tokenAddress_].push(
             Auction({
@@ -140,7 +140,7 @@ contract Market is ReentrancyGuard {
             })
         );
 
-        require(ERC20(tokenAddress_).transferFrom(msg.sender, address(this), tokenAmount_), "Token transfer failed");
+        ERC20(tokenAddress_).transferFrom(msg.sender, address(this), tokenAmount_);
 
         emit FixedSaleCreated(fixedSales[tokenAddress_].length, msg.sender, tokenAddress_, tokenAmount_, pricePerToken_);
 
@@ -151,13 +151,12 @@ contract Market is ReentrancyGuard {
         FixedSale storage sale = fixedSales[tokenAddress_][saleId_ - 1];
         require(sale.soldAmount + tokenAmount_ <= sale.tokenAmount, "No enough tokens left");
         require(
-            msg.value == sale.pricePerToken * tokenAmount_ * (10 ** uint256(ERC20(tokenAddress_).decimals())),
-            "Incorrect value"
+            msg.value == sale.pricePerToken * tokenAmount_ / (10 ** ERC20(tokenAddress_).decimals()), "Incorrect value"
         );
 
         sale.soldAmount += tokenAmount_;
 
-        require(sale.token.transfer(msg.sender, sale.tokenAmount), "Token transfer failed");
+        sale.token.transfer(msg.sender, sale.tokenAmount);
         payable(sale.seller).transfer(msg.value);
 
         emit FixedSaleCompleted(saleId_, msg.sender, tokenAmount_);

@@ -289,6 +289,7 @@ contract DaoFacet is IERC20, IERC20Metadata, IERC20Errors {
         assembly {
             _returnData := add(_returnData, 0x04)
         }
-        return abi.decode(_returnData, (string)); // All that remains is the revert string
+        // All that remains is the revert string
+        return abi.decode(_returnData, (string));
     }
 }

@@ -136,6 +136,30 @@ contract MarketTest is Test {
         assertEq(market.checkFixedSale(address(token), auctionId).soldAmount, 0);
     }
 
+    function testBuyFixedSale() public {
+        uint256 saleId = _createFixedSale();
+
+        vm.startPrank(buyer1);
+        uint256 pricePerToken = market.checkFixedSale(address(token), saleId).pricePerToken;
+        uint256 buyAmount = 100 * 10 ** token.decimals();
+
+        vm.expectRevert("Incorrect value");
+        market.buyFixedSale{value: 1}(address(token), saleId, buyAmount);
+
+        vm.expectEmit(true, true, true, true);
+        emit FixedSaleCompleted(saleId, buyer1, buyAmount);
+        market.buyFixedSale{value: pricePerToken * buyAmount / (10 ** token.decimals())}(
+            address(token), saleId, buyAmount
+        );
+
+        assertEq(market.checkFixedSale(address(token), saleId).soldAmount, buyAmount);
+
+        vm.expectRevert("No enough tokens left");
+        market.buyFixedSale(address(token), saleId, 8888 ether);
+
+        vm.stopPrank();
+    }
+
     function _createAuction() private returns (uint256 auctionId) {
         vm.startPrank(seller);
         token.approve(address(market), type(uint256).max);
@@ -147,12 +171,12 @@ contract MarketTest is Test {
         vm.stopPrank();
     }
 
-    function _createFixedSale() private returns (uint256 auctionId) {
+    function _createFixedSale() private returns (uint256 saleId) {
         vm.startPrank(seller);
         token.approve(address(market), type(uint256).max);
         vm.expectEmit(true, true, true, true);
         emit FixedSaleCreated(1, seller, address(token), token.balanceOf(seller), 100 gwei);
-        auctionId = market.createFixedSale(address(token), token.balanceOf(seller), 100 gwei);
+        saleId = market.createFixedSale(address(token), token.balanceOf(seller), 100 gwei);
         vm.stopPrank();
     }
 }
