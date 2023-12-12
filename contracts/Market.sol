@@ -81,6 +81,13 @@ contract Market is ReentrancyGuard {
         return auctions[tokenAddress_].length;
     }
 
+    function cancelAuction(address tokenAddress_, uint256 auctionId_) external nonReentrant {
+        Auction storage auction = auctions[tokenAddress_][auctionId_ - 1];
+        require(msg.sender == auction.seller, "Only the seller can cancel the auction.");
+        require(auction.highestBidder == address(0), "Someone has already placed a bid.");
+        auctions[tokenAddress_][auctionId_ - 1].ended = true;
+    }
+
     function bid(address tokenAddress_, uint256 auctionId_) external payable nonReentrant {
         Auction storage auction = auctions[tokenAddress_][auctionId_ - 1];
 
@@ -88,7 +95,8 @@ contract Market is ReentrancyGuard {
         require(msg.value > auction.highestBid, "Bid not high enough");
 
         if (auction.highestBidder != address(0)) {
-            payable(auction.highestBidder).transfer(auction.highestBid);
+            (bool success,) = payable(auction.highestBidder).call{value: auction.highestBid}("");
+            require(success, "Failed to send ETH to previous highest bidder");
         }
 
         auction.highestBidder = msg.sender;
@@ -107,7 +115,8 @@ contract Market is ReentrancyGuard {
 
         if (auction.highestBidder != address(0)) {
             auction.token.transfer(auction.highestBidder, auction.tokenAmount);
-            payable(auction.seller).transfer(auction.highestBid);
+            (bool success,) = payable(auction.seller).call{value: auction.highestBid}("");
+            require(success, "Failed to send ETH to seller");
         } else {
             auction.token.transfer(auction.seller, auction.tokenAmount);
         }
@@ -155,7 +164,8 @@ contract Market is ReentrancyGuard {
         sale.soldAmount += tokenAmount_;
 
         sale.token.transfer(msg.sender, sale.tokenAmount);
-        payable(sale.seller).transfer(msg.value);
+        (bool success,) = payable(sale.seller).call{value: msg.value}("");
+        require(success, "Failed to send ETH to seller");
 
         emit FixedSaleCompleted(saleId_, msg.sender, tokenAmount_);
     }

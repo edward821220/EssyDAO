@@ -33,7 +33,8 @@ contract VaultFacet is IERC721Receiver {
 
         crowdfundingInfo.withdrawnAmount += amount;
         s.crowdfundingInfos[crowdfundingId] = crowdfundingInfo;
-        payable(msg.sender).transfer(amount);
+        (bool success,) = payable(msg.sender).call{value: amount}("");
+        require(success, "Failed to withdraw ETH");
     }
 
     function createCrowdfundingERC20(string calldata title, address token, uint256 amount) external returns (uint256) {
@@ -75,7 +76,8 @@ contract VaultFacet is IERC721Receiver {
         uint256 fundingETH = s.totalETHByFunding;
         require(balanceETH > fundingETH, "There is no spare ETH to withdraw");
         require(balanceETH - fundingETH >= amount, "Insufficient withdrawable ETH");
-        payable(to).transfer(amount);
+        (bool success,) = payable(to).call{value: amount}("");
+        require(success, "Failed to withdraw ETH");
     }
 
     function withdrawERC20ByProposal(address to, address token, uint256 amount) external {

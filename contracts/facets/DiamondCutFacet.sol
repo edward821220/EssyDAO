@@ -12,7 +12,8 @@ contract DiamondCutFacet is IDiamondCut {
     function diamondCut(FacetCut[] calldata _diamondCut, address _init, bytes calldata _calldata) external payable {
         require(msg.value >= 0.006 ether, "Insufficient ETH");
         LibDiamond.enforceIsContractOwner();
-        payable(LibDiamond.diamondStorage().factory).transfer(msg.value);
+        (bool success,) = payable(LibDiamond.diamondStorage().factory).call{value: msg.value}("");
+        require(success, "Failed to transfer ETH to factory");
         LibDiamond.diamondCut(_diamondCut, _init, _calldata);
     }
 
@@ -22,7 +23,8 @@ contract DiamondCutFacet is IDiamondCut {
     {
         require(msg.value >= 0.006 ether, "Insufficient ETH");
         require(msg.sender == s.diamond, "Only executeProposal function can call this function");
-        payable(LibDiamond.diamondStorage().factory).transfer(msg.value);
+        (bool success,) = payable(LibDiamond.diamondStorage().factory).call{value: msg.value}("");
+        require(success, "Failed to transfer ETH to factory");
         LibDiamond.diamondCut(_diamondCut, _init, _calldata);
     }
 }

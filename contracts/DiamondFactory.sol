@@ -29,8 +29,17 @@ contract DiamondFactory is Ownable {
     ) external returns (address) {
         bytes32 salt_ = keccak256(abi.encodePacked(daoName, msg.sender));
 
-        Diamond diamond =
-        new Diamond{salt: salt_}(msg.sender, daoName,foundersInfo, tokenName, tokenSymbol, diamondCutFacet, diamondLoupeFacet, daoFacet, daoInit);
+        Diamond diamond = new Diamond{salt: salt_}(
+            msg.sender,
+            daoName,
+            foundersInfo,
+            tokenName,
+            tokenSymbol,
+            diamondCutFacet,
+            diamondLoupeFacet,
+            daoFacet,
+            daoInit
+        );
 
         DAOs.push(DAOInfo(address(diamond), daoName));
 
@@ -48,6 +57,7 @@ contract DiamondFactory is Ownable {
     }
 
     function withdraw() external onlyOwner {
-        payable(owner()).transfer(address(this).balance);
+        (bool success,) = payable(owner()).call{value: address(this).balance}("");
+        require(success, "Failed to withdraw");
     }
 }
