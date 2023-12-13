@@ -83,15 +83,18 @@ contract Market is ReentrancyGuard {
 
     function cancelAuction(address tokenAddress_, uint256 auctionId_) external nonReentrant {
         Auction storage auction = auctions[tokenAddress_][auctionId_ - 1];
-        require(msg.sender == auction.seller, "Only the seller can cancel the auction.");
-        require(auction.highestBidder == address(0), "Someone has already placed a bid.");
+        require(msg.sender == auction.seller, "Only the seller can cancel the auction");
+        require(block.timestamp < auction.endTime && !auction.ended, "Auction already ended");
+        require(auction.highestBidder == address(0), "Someone has already placed a bid");
         auctions[tokenAddress_][auctionId_ - 1].ended = true;
+        auction.token.transfer(auction.seller, auction.tokenAmount);
+        emit AuctionEnded(auctionId_, auction.highestBidder, auction.highestBid);
     }
 
     function bid(address tokenAddress_, uint256 auctionId_) external payable nonReentrant {
         Auction storage auction = auctions[tokenAddress_][auctionId_ - 1];
 
-        require(block.timestamp < auction.endTime, "Auction already ended");
+        require(block.timestamp < auction.endTime && !auction.ended, "Auction already ended");
         require(msg.value > auction.highestBid, "Bid not high enough");
 
         if (auction.highestBidder != address(0)) {

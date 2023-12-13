@@ -59,6 +59,41 @@ contract MarketTest is Test {
         assertEq(market.checkAuction(address(token), auctionId).highestBid, 0.0008 ether);
     }
 
+    function testCancelAuction() public {
+        uint256 auctionId1 = _createAuction();
+
+        vm.expectRevert("Only the seller can cancel the auction");
+        market.cancelAuction(address(token), auctionId1);
+
+        vm.startPrank(seller);
+
+        vm.expectEmit(true, true, true, true);
+        emit AuctionEnded(auctionId1, address(0), 0.0008 ether);
+        market.cancelAuction(address(token), auctionId1);
+        assertEq(token.balanceOf(seller), market.checkAuction(address(token), auctionId1).tokenAmount);
+
+        vm.expectRevert("Auction already ended");
+        market.cancelAuction(address(token), auctionId1);
+
+        vm.stopPrank();
+
+        vm.startPrank(buyer1);
+        vm.expectRevert("Auction already ended");
+        market.bid{value: 0.001 ether}(address(token), auctionId1);
+        vm.stopPrank();
+
+        uint256 auctionId2 = _createAuction();
+
+        vm.startPrank(buyer2);
+        market.bid{value: 0.001 ether}(address(token), auctionId2);
+        vm.stopPrank();
+
+        vm.startPrank(seller);
+        vm.expectRevert("Someone has already placed a bid");
+        market.cancelAuction(address(token), auctionId2);
+        vm.stopPrank();
+    }
+
     function testBid() public {
         uint256 auctionId = _createAuction();
 
@@ -165,7 +200,12 @@ contract MarketTest is Test {
         token.approve(address(market), type(uint256).max);
         vm.expectEmit(true, true, true, true);
         emit AuctionCreated(
-            1, seller, address(token), token.balanceOf(seller), 0.0008 ether, block.timestamp + AUCTION_DURATION
+            market.checkAuctions(address(token)).length + 1,
+            seller,
+            address(token),
+            token.balanceOf(seller),
+            0.0008 ether,
+            block.timestamp + AUCTION_DURATION
         );
         auctionId = market.createAuction(address(token), token.balanceOf(seller), 0.0008 ether, 7 days);
         vm.stopPrank();
