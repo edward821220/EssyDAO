@@ -22,6 +22,7 @@ contract Market is ReentrancyGuard {
         ERC20 token;
         uint256 tokenAmount;
         uint256 soldAmount;
+        bool canceled;
     }
 
     mapping(address token => Auction[]) public auctions;
@@ -44,7 +45,11 @@ contract Market is ReentrancyGuard {
         uint256 indexed saleId, address indexed seller, address indexed tokenAddress, uint256 tokenAmount, uint256 price
     );
 
-    event FixedSaleCompleted(uint256 indexed saleId, address indexed buyer, uint256 amount);
+    event FixedSaleCanceled(address indexed tokenAddress, uint256 indexed saleId);
+
+    event FixedSaleCompleted(
+        address indexed tokenAddress, uint256 indexed saleId, address indexed buyer, uint256 amount
+    );
 
     // Auction
     function createAuction(address tokenAddress_, uint256 tokenAmount_, uint256 startPrice_, uint256 duration)
@@ -112,7 +117,7 @@ contract Market is ReentrancyGuard {
         Auction storage auction = auctions[tokenAddress_][auctionId_ - 1];
 
         require(block.timestamp >= auction.endTime, "Auction not yet ended");
-        require(!auction.ended, "Auction end already called");
+        require(!auction.ended, "Auction already ended");
 
         auction.ended = true;
 
@@ -146,7 +151,8 @@ contract Market is ReentrancyGuard {
                 pricePerToken: pricePerToken_,
                 token: ERC20(tokenAddress_),
                 tokenAmount: tokenAmount_,
-                soldAmount: 0
+                soldAmount: 0,
+                canceled: false
             })
         );
 
@@ -157,8 +163,22 @@ contract Market is ReentrancyGuard {
         return fixedSales[tokenAddress_].length;
     }
 
+    function cancelFixedSale(address tokenAddress_, uint256 saleId_) external nonReentrant {
+        FixedSale storage sale = fixedSales[tokenAddress_][saleId_ - 1];
+        require(msg.sender == sale.seller, "Only the seller can cancel the auction");
+        require(!sale.canceled, "Sale already canceled");
+
+        uint256 repayAmount = sale.tokenAmount - sale.soldAmount;
+        require(repayAmount > 0, "No enough tokens left");
+        sale.canceled = true;
+        sale.token.transfer(msg.sender, repayAmount);
+
+        emit FixedSaleCanceled(tokenAddress_, saleId_);
+    }
+
     function buyFixedSale(address tokenAddress_, uint256 saleId_, uint256 tokenAmount_) external payable nonReentrant {
         FixedSale storage sale = fixedSales[tokenAddress_][saleId_ - 1];
+        require(!sale.canceled, "Sale already canceled");
         require(sale.soldAmount + tokenAmount_ <= sale.tokenAmount, "No enough tokens left");
         require(
             msg.value == sale.pricePerToken * tokenAmount_ / (10 ** ERC20(tokenAddress_).decimals()), "Incorrect value"
@@ -170,14 +190,14 @@ contract Market is ReentrancyGuard {
         (bool success,) = payable(sale.seller).call{value: msg.value}("");
         require(success, "Failed to send ETH to seller");
 
-        emit FixedSaleCompleted(saleId_, msg.sender, tokenAmount_);
+        emit FixedSaleCompleted(tokenAddress_, saleId_, msg.sender, tokenAmount_);
     }
 
     function checkFixedSales(address tokenAddress) external view returns (FixedSale[] memory) {
         return fixedSales[tokenAddress];
     }
 
-    function checkFixedSale(address tokenAddress, uint256 auctionId) external view returns (FixedSale memory) {
-        return fixedSales[tokenAddress][auctionId - 1];
+    function checkFixedSale(address tokenAddress, uint256 saleId) external view returns (FixedSale memory) {
+        return fixedSales[tokenAddress][saleId - 1];
     }
 }
