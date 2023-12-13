@@ -34,6 +34,11 @@ contract FactoryTest is SetUp {
         assertEq(dao.balanceOf(founderC), 300 ether);
     }
 
+    function testGetDAOs() public {
+        _createDAO();
+        assertEq(factory.getDAOs().length, 1);
+    }
+
     function testWithdraw() public {
         deal(address(factory), 100 ether);
 
