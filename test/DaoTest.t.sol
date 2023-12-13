@@ -26,6 +26,7 @@ contract DaoTest is SetUp {
         assertEq(proposal.id, proposalId);
         assertEq(proposal.author, founderA);
         assertEq(uint256(proposal.status), uint256(Status.Pending));
+        assertEq(dao.getProposals().length, 1);
         vm.stopPrank();
     }
 
@@ -35,6 +36,14 @@ contract DaoTest is SetUp {
 
         vm.startPrank(founderA);
         uint256 proposalId = dao.createProposal(new bytes(0));
+        vm.stopPrank();
+
+        vm.startPrank(founderB);
+        vm.expectRevert("Only author can cancel proposal");
+        dao.cancelProposal(proposalId);
+        vm.stopPrank();
+
+        vm.startPrank(founderA);
         dao.cancelProposal(proposalId);
         assertEq(uint256(dao.checkProposal(proposalId).status), uint256(Status.Cancelled));
         vm.stopPrank();
