@@ -13,9 +13,8 @@ contract DividendFacet is MintFunctions {
     }
 
     function calculateDividend() public view returns (uint256) {
-        DaoFacet dao = DaoFacet(s.diamond);
         uint256 initialBalance = getInitialBalance();
-        require(dao.balanceOf(msg.sender) >= initialBalance, "You should hold your initial balance");
+        require(s.balances[msg.sender] >= initialBalance, "You should hold your initial balance");
 
         uint256 startTime = getStartTime();
         uint256 duration = getDuration();
