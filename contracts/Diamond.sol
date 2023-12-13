@@ -42,11 +42,12 @@ contract Diamond {
 
         {
             // DiamondLoupeFacet
-            bytes4[] memory diamondLoupeSelectors = new bytes4[](4);
+            bytes4[] memory diamondLoupeSelectors = new bytes4[](5);
             diamondLoupeSelectors[0] = IDiamondLoupe.facets.selector;
             diamondLoupeSelectors[1] = IDiamondLoupe.facetFunctionSelectors.selector;
             diamondLoupeSelectors[2] = IDiamondLoupe.facetAddresses.selector;
             diamondLoupeSelectors[3] = IDiamondLoupe.facetAddress.selector;
+            diamondLoupeSelectors[4] = IERC165.supportsInterface.selector;
 
             cut[1] = IDiamondCut.FacetCut({
                 facetAddress: diamondLoupeFacet,
