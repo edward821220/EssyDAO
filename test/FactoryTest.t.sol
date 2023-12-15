@@ -29,7 +29,8 @@ contract FactoryTest is SetUp {
         assertEq(dao.name(), "Goverence Token");
         assertEq(dao.symbol(), "GOV");
         assertEq(dao.totalSupply(), 1000 ether);
-        assertEq(dao.totalSupplyAt(5), 1000 ether);
+        assertEq(dao.totalSupplyAt(block.number), 1000 ether);
+        assertEq(dao.balanceOfAt(founderB, block.number), 200 ether);
         assertEq(dao.balanceOf(founderA), 500 ether);
         assertEq(dao.balanceOf(founderB), 200 ether);
         assertEq(dao.balanceOf(founderC), 300 ether);

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import "forge-std/Test.sol";
 import {SetUp} from "./helper/SetUp.sol";
 import {DaoFacet} from "../contracts/facets/DaoFacet.sol";
 import {Proposal, Side, Status, Receiver} from "../contracts/utils/AppStorage.sol";
@@ -25,6 +26,7 @@ contract DaoTest is SetUp {
         assertEq(proposalId, 1);
         assertEq(proposal.id, proposalId);
         assertEq(proposal.author, founderA);
+        assertEq(proposal.snapshotId, block.number - 1);
         assertEq(uint256(proposal.status), uint256(Status.Pending));
         assertEq(dao.getProposals().length, 1);
         vm.stopPrank();
@@ -58,6 +60,9 @@ contract DaoTest is SetUp {
         address daoDiamond = _createDAO();
         DaoFacet dao = DaoFacet(daoDiamond);
 
+        // // Use previous block number as proposal snapshot id, so we should go next block.
+        vm.roll(block.number + 1);
+
         vm.startPrank(founderA);
         uint256 proposalId = dao.createProposal(new bytes(0));
         dao.vote(proposalId, Side.Yes);
@@ -73,7 +78,7 @@ contract DaoTest is SetUp {
         vm.stopPrank();
 
         vm.startPrank(alice);
-        vm.expectRevert("You didn't have enough shares at the time of proposal created");
+        vm.expectRevert("You didn't have enough shares at the block before proposal created");
         dao.vote(proposalId, Side.Yes);
         dao.transfer(founderB, 100 ether);
         vm.stopPrank();
@@ -119,6 +124,9 @@ contract DaoTest is SetUp {
 
         vm.expectRevert("Only executeProposal function can call this function");
         dao.mintByProposal(receivers);
+
+        // // Use previous block number as proposal snapshot id, so we should go next block.
+        vm.roll(block.number + 1);
 
         vm.startPrank(founderA);
         uint256 proposalId = dao.createProposal(abi.encodeWithSelector(dao.mintByProposal.selector, receivers));

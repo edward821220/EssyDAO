@@ -27,7 +27,7 @@ contract DaoFacet is IERC20, IERC20Metadata, IERC20Errors {
                 votesNo: 0,
                 data: data_,
                 status: Status.Pending,
-                snapshotId: _getCurrentSnapshotId()
+                snapshotId: _getCurrentSnapshotId() - 1
             })
         );
     }
@@ -57,7 +57,7 @@ contract DaoFacet is IERC20, IERC20Metadata, IERC20Errors {
         require(proposal.status != Status.Cancelled, "Proposal is cancelled");
         uint256 balanceSnapshot = balanceOfAt(msg.sender, proposal.snapshotId);
         uint256 totalSupplySpanpshot = totalSupplyAt(proposal.snapshotId);
-        require(balanceSnapshot > 0, "You didn't have enough shares at the time of proposal created");
+        require(balanceSnapshot > 0, "You didn't have enough shares at the block before proposal created");
 
         s.isVoted[msg.sender][proposalId] = true;
 
@@ -236,14 +236,8 @@ contract DaoFacet is IERC20, IERC20Metadata, IERC20Errors {
         }
     }
 
-    function _snapshot() internal virtual returns (uint256) {
-        s.currentSnapshotId++;
-        uint256 currentId = _getCurrentSnapshotId();
-        return currentId;
-    }
-
     function _getCurrentSnapshotId() internal view virtual returns (uint256) {
-        return s.currentSnapshotId;
+        return block.number;
     }
 
     function _valueAt(uint256 snapshotId, Snapshots storage snapshots) private view returns (bool, uint256) {
@@ -269,19 +263,8 @@ contract DaoFacet is IERC20, IERC20Metadata, IERC20Errors {
 
     function _updateSnapshot(Snapshots storage snapshots, uint256 currentValue) private {
         uint256 currentId = _getCurrentSnapshotId();
-        if (_lastSnapshotId(snapshots.ids) < currentId) {
-            snapshots.ids.push(currentId);
-            snapshots.values.push(currentValue);
-        }
-        _snapshot();
-    }
-
-    function _lastSnapshotId(uint256[] storage ids) private view returns (uint256) {
-        if (ids.length == 0) {
-            return 0;
-        } else {
-            return ids[ids.length - 1];
-        }
+        snapshots.ids.push(currentId);
+        snapshots.values.push(currentValue);
     }
 
     function _getRevertMsg(bytes memory _returnData) private pure returns (string memory) {

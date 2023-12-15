@@ -74,5 +74,7 @@ contract SetUp is Test {
             address(daoInit)
         );
         vm.stopPrank();
+        // Use block number as ERC20 snapshot id, so we should go next block.
+        vm.roll(block.number + 1);
     }
 }

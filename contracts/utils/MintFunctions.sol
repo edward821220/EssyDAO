@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import "forge-std/Test.sol";
 import {AppStorage, Snapshots} from "../utils/AppStorage.sol";
 
 contract MintFunctions {
@@ -29,25 +30,12 @@ contract MintFunctions {
     }
 
     function _updateSnapshot(Snapshots storage snapshots, uint256 currentValue) internal {
-        uint256 currentId = s.currentSnapshotId;
-        if (_lastSnapshotId(snapshots.ids) < currentId) {
-            snapshots.ids.push(currentId);
-            snapshots.values.push(currentValue);
-        }
-        _snapshot();
+        uint256 currentId = _getCurrentSnapshotId();
+        snapshots.ids.push(currentId);
+        snapshots.values.push(currentValue);
     }
 
-    function _lastSnapshotId(uint256[] storage ids) internal view returns (uint256) {
-        if (ids.length == 0) {
-            return 0;
-        } else {
-            return ids[ids.length - 1];
-        }
-    }
-
-    function _snapshot() internal returns (uint256) {
-        s.currentSnapshotId++;
-        uint256 currentId = s.currentSnapshotId;
-        return currentId;
+    function _getCurrentSnapshotId() internal view virtual returns (uint256) {
+        return block.number;
     }
 }

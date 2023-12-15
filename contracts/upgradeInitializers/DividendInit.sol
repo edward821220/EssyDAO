@@ -8,7 +8,7 @@ contract DividendInit {
 
     function init(uint256 duration, uint256 annualRate) external payable {
         s.dividendInfo.startTime = block.timestamp;
-        s.dividendInfo.snapshopId = s.currentSnapshotId;
+        s.dividendInfo.snapshopId = block.number - 1;
         s.dividendInfo.duration = duration;
         s.dividendInfo.annualRate = annualRate;
     }

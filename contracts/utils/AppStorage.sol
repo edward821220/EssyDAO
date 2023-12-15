@@ -74,7 +74,6 @@ struct AppStorage {
     mapping(address account => mapping(uint256 => bool)) isVoted;
     mapping(address => Snapshots) accountBalanceSnapshots;
     Snapshots totalSupplySnapshots;
-    uint256 currentSnapshotId;
     // Dividend Facet
     Dividend dividendInfo;
     mapping(address account => uint256) tokenReleased;
