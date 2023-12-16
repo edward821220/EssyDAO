@@ -59,7 +59,6 @@ contract Market is ReentrancyGuard {
         require(tokenAmount_ > 0, "Token amount must be greater than zero");
 
         ERC20 token_ = ERC20(tokenAddress_);
-        token_.transferFrom(msg.sender, address(this), tokenAmount_);
 
         auctions[tokenAddress_].push(
             Auction({
@@ -73,6 +72,8 @@ contract Market is ReentrancyGuard {
                 ended: false
             })
         );
+
+        token_.transferFrom(msg.sender, address(this), tokenAmount_);
 
         emit AuctionCreated(
             auctions[tokenAddress_].length,
@@ -145,18 +146,20 @@ contract Market is ReentrancyGuard {
         external
         returns (uint256 saleId)
     {
+        ERC20 token_ = ERC20(tokenAddress_);
+
         fixedSales[tokenAddress_].push(
             FixedSale({
                 seller: msg.sender,
                 pricePerToken: pricePerToken_,
-                token: ERC20(tokenAddress_),
+                token: token_,
                 tokenAmount: tokenAmount_,
                 soldAmount: 0,
                 canceled: false
             })
         );
 
-        ERC20(tokenAddress_).transferFrom(msg.sender, address(this), tokenAmount_);
+        token_.transferFrom(msg.sender, address(this), tokenAmount_);
 
         emit FixedSaleCreated(fixedSales[tokenAddress_].length, msg.sender, tokenAddress_, tokenAmount_, pricePerToken_);
 
