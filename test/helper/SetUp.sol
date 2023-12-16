@@ -39,7 +39,7 @@ contract SetUp is Test {
 
     function setUp() public virtual {
         vm.startPrank(admin);
-        factory = new DiamondFactory(admin);
+        factory = new DiamondFactory();
         diamondCutFacet = new DiamondCutFacet();
         diamondLoupeFacet = new DiamondLoupeFacet();
         daoFacet = new DaoFacet();

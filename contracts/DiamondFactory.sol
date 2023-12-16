@@ -11,7 +11,7 @@ contract DiamondFactory is Ownable {
 
     event DAOCreated(address indexed daoAddress, address indexed founder, string indexed daoName);
 
-    constructor(address owner) Ownable(owner) {}
+    constructor() Ownable(msg.sender) {}
 
     receive() external payable {}
 
