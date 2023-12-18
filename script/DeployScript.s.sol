@@ -16,19 +16,32 @@ import {VaultInit} from "../contracts/upgradeInitializers/VaultInit.sol";
 
 contract DeployScript is Script {
     function run() public {
-        bytes32 salt_ = keccak256(abi.encodePacked(vm.envUint("ADDRESS_LOCAL")));
+        bytes32 salt_ = keccak256(abi.encodePacked(vm.envUint("ADDRESS_LOCAL"), "EasyDAO contracts"));
+
         vm.startBroadcast(vm.envUint("PRIVATE_KEY_LOCAL"));
-        new DiamondFactory{salt: salt_}();
-        new DiamondCutFacet{salt: salt_}();
-        new DiamondLoupeFacet{salt: salt_}();
-        new DaoFacet{salt: salt_}();
-        new DaoInit{salt: salt_}();
-        new OwnershipFacet{salt: salt_}();
-        new OwnershipInit{salt: salt_}();
-        new DividendFacet{salt: salt_}();
-        new DividendInit{salt: salt_}();
-        new VaultFacet{salt: salt_}();
-        new VaultInit{salt: salt_}();
+        DiamondFactory diamondFactory = new DiamondFactory{salt: salt_}();
+        DiamondCutFacet diamondCutFacet = new DiamondCutFacet{salt: salt_}();
+        DiamondLoupeFacet diamondLoupeFacet = new DiamondLoupeFacet{salt: salt_}();
+        DaoFacet daoFacet = new DaoFacet{salt: salt_}();
+        DaoInit daoInit = new DaoInit{salt: salt_}();
+        OwnershipFacet ownershipFacet = new OwnershipFacet{salt: salt_}();
+        OwnershipInit ownershipInit = new OwnershipInit{salt: salt_}();
+        DividendFacet dividendFacet = new DividendFacet{salt: salt_}();
+        DividendInit dividendInit = new DividendInit{salt: salt_}();
+        VaultFacet vaultFacet = new VaultFacet{salt: salt_}();
+        VaultInit vaultInit = new VaultInit{salt: salt_}();
+
+        console2.log("DiamondFactory", address(diamondFactory));
+        console2.log("DiamondCutFacet", address(diamondCutFacet));
+        console2.log("DiamondLoupeFacet", address(diamondLoupeFacet));
+        console2.log("DaoFacet", address(daoFacet));
+        console2.log("DaoInit", address(daoInit));
+        console2.log("OwnershipFacet", address(ownershipFacet));
+        console2.log("OwnershipInit", address(ownershipInit));
+        console2.log("DividendFacet", address(dividendFacet));
+        console2.log("DividendInit", address(dividendInit));
+        console2.log("VaultFacet", address(vaultFacet));
+        console2.log("VaultInit", address(vaultInit));
         vm.stopBroadcast();
     }
 }
