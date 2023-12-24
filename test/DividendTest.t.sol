@@ -46,7 +46,8 @@ contract DividendTest is SetUp {
                 cut,
                 address(dividendInit),
                 abi.encodeWithSignature("init(uint256,uint256)", 26 weeks, 5)
-            )
+            ),
+            "Test proposal"
         );
         dao.vote(proposalId, Side.Yes);
         vm.stopPrank();

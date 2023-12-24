@@ -6,6 +6,8 @@ import {DaoFacet} from "../contracts/facets/DaoFacet.sol";
 import {Proposal, Side, Status, Receiver} from "../contracts/utils/AppStorage.sol";
 
 contract DaoTest is SetUp {
+    event ProposalCreated(uint256 indexed proposalId, string indexed description);
+
     function setUp() public override {
         super.setUp();
     }
@@ -16,11 +18,13 @@ contract DaoTest is SetUp {
 
         vm.startPrank(alice);
         vm.expectRevert("No enough shares to create proposal");
-        dao.createProposal(new bytes(0));
+        dao.createProposal(new bytes(0), "Test proposal");
         vm.stopPrank();
 
         vm.startPrank(founderA);
-        uint256 proposalId = dao.createProposal(new bytes(0));
+        vm.expectEmit(true, true, true, true);
+        emit ProposalCreated(1, "Test proposal");
+        uint256 proposalId = dao.createProposal(new bytes(0), "Test proposal");
         Proposal memory proposal = dao.checkProposal(proposalId);
         assertEq(proposalId, 1);
         assertEq(proposal.id, proposalId);
@@ -36,7 +40,7 @@ contract DaoTest is SetUp {
         DaoFacet dao = DaoFacet(daoDiamond);
 
         vm.startPrank(founderA);
-        uint256 proposalId = dao.createProposal(new bytes(0));
+        uint256 proposalId = dao.createProposal(new bytes(0), "Test proposal");
         vm.stopPrank();
 
         vm.startPrank(founderB);
@@ -63,7 +67,7 @@ contract DaoTest is SetUp {
         vm.roll(block.number + 1);
 
         vm.startPrank(founderA);
-        uint256 proposalId = dao.createProposal(new bytes(0));
+        uint256 proposalId = dao.createProposal(new bytes(0), "Test proposal");
         dao.vote(proposalId, Side.Yes);
         vm.expectRevert("Already voted");
         dao.vote(proposalId, Side.No);
@@ -128,7 +132,8 @@ contract DaoTest is SetUp {
         vm.roll(block.number + 1);
 
         vm.startPrank(founderA);
-        uint256 proposalId = dao.createProposal(abi.encodeWithSelector(dao.mintByProposal.selector, receivers));
+        uint256 proposalId =
+            dao.createProposal(abi.encodeWithSelector(dao.mintByProposal.selector, receivers), "Test proposal");
         vm.expectRevert("Proposal is not approved");
         dao.executeProposal(proposalId);
         dao.vote(proposalId, Side.Yes);

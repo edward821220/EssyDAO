@@ -51,7 +51,8 @@ contract VaultTest is SetUp {
                 cut,
                 address(vaultInit),
                 abi.encodeWithSignature("init()")
-            )
+            ),
+            "Test proposal"
         );
         dao.vote(proposalId, Side.Yes);
         vm.stopPrank();
@@ -147,7 +148,7 @@ contract VaultTest is SetUp {
         upgradedDao.wtihdrawETHByProposal(founderB, 88 ether);
 
         bytes memory data = abi.encodeWithSelector(vaultFacet.wtihdrawETHByProposal.selector, founderB, 88 ether);
-        uint256 proposalId = dao.createProposal(data);
+        uint256 proposalId = dao.createProposal(data, "Test proposal");
         dao.vote(proposalId, Side.Yes);
         vm.stopPrank();
 
@@ -177,7 +178,7 @@ contract VaultTest is SetUp {
 
         bytes memory data =
             abi.encodeWithSelector(vaultFacet.withdrawERC20ByProposal.selector, founderB, address(token), 88 ether);
-        uint256 proposalId = dao.createProposal(data);
+        uint256 proposalId = dao.createProposal(data, "Test proposal");
         dao.vote(proposalId, Side.Yes);
         vm.stopPrank();
 

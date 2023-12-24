@@ -15,7 +15,9 @@ contract DaoFacet is IERC20, IERC20Metadata, IERC20Errors {
     uint256 constant CREATE_PROPOSAL_MIN_SHARES = 100e18;
     uint256 constant VOTING_PERIOD = 7 days;
 
-    function createProposal(bytes calldata data_) external returns (uint256 proposalId) {
+    event ProposalCreated(uint256 indexed proposalId, string indexed description);
+
+    function createProposal(bytes calldata data_, string calldata description) external returns (uint256 proposalId) {
         require(balanceOf(msg.sender) >= CREATE_PROPOSAL_MIN_SHARES, "No enough shares to create proposal");
         proposalId = s.proposals.length + 1;
         s.proposals.push(
@@ -30,6 +32,7 @@ contract DaoFacet is IERC20, IERC20Metadata, IERC20Errors {
                 snapshotId: _getCurrentSnapshotId() - 1
             })
         );
+        emit ProposalCreated(proposalId, description);
     }
 
     function cancelProposal(uint256 proposalId) external {
