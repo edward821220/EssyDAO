@@ -15,7 +15,7 @@ contract DaoFacet is IERC20, IERC20Metadata, IERC20Errors {
     uint256 constant CREATE_PROPOSAL_MIN_SHARES = 100e18;
     uint256 constant VOTING_PERIOD = 7 days;
 
-    event ProposalCreated(uint256 indexed proposalId, string indexed proposalType, string indexed description);
+    event ProposalCreated(uint256 indexed proposalId, string proposalType, string description);
 
     function createProposal(bytes calldata data_, string calldata proposalType, string calldata description)
         external

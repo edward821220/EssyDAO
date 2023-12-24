@@ -6,7 +6,7 @@ import {DaoFacet} from "../contracts/facets/DaoFacet.sol";
 import {Proposal, Side, Status, Receiver} from "../contracts/utils/AppStorage.sol";
 
 contract DaoTest is SetUp {
-    event ProposalCreated(uint256 indexed proposalId, string indexed proposalType, string indexed description);
+    event ProposalCreated(uint256 indexed proposalId, string proposalType, string description);
 
     function setUp() public override {
         super.setUp();
