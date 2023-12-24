@@ -47,6 +47,7 @@ contract DividendTest is SetUp {
                 address(dividendInit),
                 abi.encodeWithSignature("init(uint256,uint256)", 26 weeks, 5)
             ),
+            "Upgrade",
             "Test proposal"
         );
         dao.vote(proposalId, Side.Yes);

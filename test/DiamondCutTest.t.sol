@@ -42,6 +42,7 @@ contract DiamondCutTest is SetUp {
                 address(ownershipInit),
                 abi.encodeWithSignature("init(address)", founderB)
             ),
+            "Upgrade",
             "Test proposal"
         );
         dao.vote(proposalId, Side.Yes);
@@ -95,6 +96,7 @@ contract DiamondCutTest is SetUp {
                 address(ownershipInit),
                 abi.encodeWithSignature("init(address)", founderC)
             ),
+            "Upgrade",
             "Test proposal"
         );
         dao.vote(proposalId, Side.Yes);
