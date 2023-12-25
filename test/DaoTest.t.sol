@@ -65,7 +65,7 @@ contract DaoTest is SetUp {
         address daoDiamond = _createDAO();
         DaoFacet dao = DaoFacet(daoDiamond);
 
-        // // Use previous block number as proposal snapshot id, so we should go next block.
+        // Use previous block number as proposal snapshot id, so we should go next block.
         vm.roll(block.number + 1);
 
         vm.startPrank(founderA);
@@ -130,7 +130,7 @@ contract DaoTest is SetUp {
         vm.expectRevert("Only executeProposal function can call this function");
         dao.mintByProposal(receivers);
 
-        // // Use previous block number as proposal snapshot id, so we should go next block.
+        // Use previous block number as proposal snapshot id, so we should go next block.
         vm.roll(block.number + 1);
 
         vm.startPrank(founderA);

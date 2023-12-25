@@ -37,7 +37,7 @@ contract DividendTest is SetUp {
             functionSelectors: dividendCutSelectors
         });
 
-        // // Use previous block number as proposal snapshot id, so we should go next block.
+        // Use previous block number as proposal snapshot id, so we should go next block.
         vm.roll(block.number + 1);
 
         uint256 proposalId = dao.createProposal(

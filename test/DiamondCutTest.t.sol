@@ -32,7 +32,7 @@ contract DiamondCutTest is SetUp {
             functionSelectors: ownershipCutSelectors
         });
 
-        // // Use previous block number as proposal snapshot id, so we should go next block.
+        // Use previous block number as proposal snapshot id, so we should go next block.
         vm.roll(block.number + 1);
 
         uint256 proposalId = dao.createProposal(
@@ -86,7 +86,7 @@ contract DiamondCutTest is SetUp {
             functionSelectors: ownershipCutSelectors
         });
 
-        // // Use previous block number as proposal snapshot id, so we should go next block.
+        // Use previous block number as proposal snapshot id, so we should go next block.
         vm.roll(block.number + 1);
 
         uint256 proposalId = dao.createProposal(
