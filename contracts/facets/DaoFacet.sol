@@ -15,7 +15,9 @@ contract DaoFacet is IERC20, IERC20Metadata, IERC20Errors {
     uint256 constant CREATE_PROPOSAL_MIN_SHARES = 100e18;
     uint256 constant VOTING_PERIOD = 7 days;
 
-    event ProposalCreated(uint256 indexed proposalId, string proposalType, string description);
+    event ProposalCreated(
+        uint256 indexed proposalId, uint256 indexed totalSupplySnapshot, string proposalType, string description
+    );
 
     function createProposal(bytes calldata data_, string calldata proposalType, string calldata description)
         external
@@ -23,6 +25,7 @@ contract DaoFacet is IERC20, IERC20Metadata, IERC20Errors {
     {
         require(balanceOf(msg.sender) >= CREATE_PROPOSAL_MIN_SHARES, "No enough shares to create proposal");
         proposalId = s.proposals.length + 1;
+        uint256 snapshotId = _getCurrentSnapshotId() - 1;
         s.proposals.push(
             Proposal({
                 id: proposalId,
@@ -32,10 +35,11 @@ contract DaoFacet is IERC20, IERC20Metadata, IERC20Errors {
                 votesNo: 0,
                 data: data_,
                 status: Status.Pending,
-                snapshotId: _getCurrentSnapshotId() - 1
+                snapshotId: snapshotId
             })
         );
-        emit ProposalCreated(proposalId, proposalType, description);
+        uint256 totalSupplySnapshot = totalSupplyAt(snapshotId);
+        emit ProposalCreated(proposalId, totalSupplySnapshot, proposalType, description);
     }
 
     function cancelProposal(uint256 proposalId) external {
@@ -95,7 +99,7 @@ contract DaoFacet is IERC20, IERC20Metadata, IERC20Errors {
     function mintByProposal(Receiver[] calldata receivers) external {
         require(msg.sender == s.diamond, "Only executeProposal function can call this function");
         for (uint256 i = 0; i < receivers.length; ++i) {
-            require(receivers[i].amount <= 8888 ether, "Amount must be less than 10000 ether");
+            require(receivers[i].amount <= 88888 ether, "Amount must be less than 100000 ether");
             _mint(receivers[i].receiver, receivers[i].amount);
         }
     }

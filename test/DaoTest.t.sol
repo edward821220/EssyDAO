@@ -6,7 +6,9 @@ import {DaoFacet} from "../contracts/facets/DaoFacet.sol";
 import {Proposal, Side, Status, Receiver} from "../contracts/utils/AppStorage.sol";
 
 contract DaoTest is SetUp {
-    event ProposalCreated(uint256 indexed proposalId, string proposalType, string description);
+    event ProposalCreated(
+        uint256 indexed proposalId, uint256 indexed totalSupplySnapshot, string proposalType, string description
+    );
 
     function setUp() public override {
         super.setUp();
@@ -23,7 +25,7 @@ contract DaoTest is SetUp {
 
         vm.startPrank(founderA);
         vm.expectEmit(true, true, true, true);
-        emit ProposalCreated(1, "Other", "Test proposal");
+        emit ProposalCreated(1, dao.totalSupplyAt(block.number - 1), "Other", "Test proposal");
         uint256 proposalId = dao.createProposal(new bytes(0), "Other", "Test proposal");
         Proposal memory proposal = dao.checkProposal(proposalId);
         assertEq(proposalId, 1);
