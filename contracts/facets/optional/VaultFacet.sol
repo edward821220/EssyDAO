@@ -69,7 +69,7 @@ contract VaultFacet is IERC721Receiver {
     }
 
     // Accidentally received ETH or ERC20 can be transferred out through a Proposal.
-    function wtihdrawETHByProposal(address to, uint256 amount) external {
+    function withdrawETHByProposal(address to, uint256 amount) external {
         require(msg.sender == s.diamond, "Only executeProposal function can call this function");
 
         uint256 balanceETH = address(this).balance;

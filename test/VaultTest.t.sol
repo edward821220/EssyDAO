@@ -26,7 +26,7 @@ contract VaultTest is SetUp {
         vaultCutSelectors[0] = vaultFacet.createCrowdfundingETH.selector;
         vaultCutSelectors[1] = vaultFacet.contributeETH.selector;
         vaultCutSelectors[2] = vaultFacet.withdrawETHByCrowdfunding.selector;
-        vaultCutSelectors[3] = vaultFacet.wtihdrawETHByProposal.selector;
+        vaultCutSelectors[3] = vaultFacet.withdrawETHByProposal.selector;
         vaultCutSelectors[4] = vaultFacet.createCrowdfundingERC20.selector;
         vaultCutSelectors[5] = vaultFacet.contributeERC20.selector;
         vaultCutSelectors[6] = vaultFacet.withdrawERC20ByCrowdfunding.selector;
@@ -146,9 +146,9 @@ contract VaultTest is SetUp {
     function testWithdrawETHByProposal() public {
         vm.startPrank(founderA);
         vm.expectRevert("Only executeProposal function can call this function");
-        upgradedDao.wtihdrawETHByProposal(founderB, 88 ether);
+        upgradedDao.withdrawETHByProposal(founderB, 88 ether);
 
-        bytes memory data = abi.encodeWithSelector(vaultFacet.wtihdrawETHByProposal.selector, founderB, 88 ether);
+        bytes memory data = abi.encodeWithSelector(vaultFacet.withdrawETHByProposal.selector, founderB, 88 ether);
         uint256 proposalId = dao.createProposal(data, "WithdrawETH", "Test proposal");
         dao.vote(proposalId, Side.Yes);
         vm.stopPrank();
