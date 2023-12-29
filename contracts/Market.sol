@@ -87,7 +87,7 @@ contract Market is ReentrancyGuard {
         return auctions[tokenAddress_].length;
     }
 
-    function cancelAuction(address tokenAddress_, uint256 auctionId_) external nonReentrant {
+    function cancelAuction(address tokenAddress_, uint256 auctionId_) external {
         Auction storage auction = auctions[tokenAddress_][auctionId_ - 1];
         require(msg.sender == auction.seller, "Only the seller can cancel the auction");
         require(block.timestamp < auction.endTime && !auction.ended, "Auction already ended");
@@ -104,8 +104,8 @@ contract Market is ReentrancyGuard {
         require(msg.value > auction.highestBid, "Bid not high enough");
 
         if (auction.highestBidder != address(0)) {
-            (bool success,) = payable(auction.highestBidder).call{value: auction.highestBid}("");
-            require(success, "Failed to send ETH to previous highest bidder");
+            // Ignore return value to prevent DOS attack
+            payable(auction.highestBidder).call{value: auction.highestBid}("");
         }
 
         auction.highestBidder = msg.sender;
@@ -166,7 +166,7 @@ contract Market is ReentrancyGuard {
         return fixedSales[tokenAddress_].length;
     }
 
-    function cancelFixedSale(address tokenAddress_, uint256 saleId_) external nonReentrant {
+    function cancelFixedSale(address tokenAddress_, uint256 saleId_) external {
         FixedSale storage sale = fixedSales[tokenAddress_][saleId_ - 1];
         require(msg.sender == sale.seller, "Only the seller can cancel the auction");
         require(!sale.canceled, "Sale already canceled");
