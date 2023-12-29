@@ -75,8 +75,9 @@ struct AppStorage {
     mapping(address => Snapshots) accountBalanceSnapshots;
     Snapshots totalSupplySnapshots;
     // Dividend Facet
+    uint256 dividendTimes;
     Dividend dividendInfo;
-    mapping(address account => uint256) tokenReleased;
+    mapping(address account => mapping(uint256 dividendTimes => uint256)) tokenReleased;
     // Vault Facet
     CrowdfundingInfo[] crowdfundingInfos;
     uint256 totalETHByFunding;

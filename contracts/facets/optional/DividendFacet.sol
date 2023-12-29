@@ -6,16 +6,16 @@ import {DaoFacet} from "../DaoFacet.sol";
 
 contract DividendFacet is MintFunctions {
     function withdrawDividend() public returns (uint256 dividend) {
+        uint256 initialBalance = getInitialBalance();
+        require(s.balances[msg.sender] >= initialBalance, "You should hold your initial balance");
+
         dividend = calculateDividend();
         require(dividend > 0, "No dividend to withdraw");
-        s.tokenReleased[msg.sender] += dividend;
+        s.tokenReleased[msg.sender][s.dividendTimes] += dividend;
         _mint(msg.sender, dividend);
     }
 
     function calculateDividend() public view returns (uint256) {
-        uint256 initialBalance = getInitialBalance();
-        require(s.balances[msg.sender] >= initialBalance, "You should hold your initial balance");
-
         uint256 startTime = getStartTime();
         uint256 duration = getDuration();
         uint256 timestamp = block.timestamp;
@@ -53,6 +53,6 @@ contract DividendFacet is MintFunctions {
     }
 
     function getReleasedDividend() public view returns (uint256 releasedDividend) {
-        releasedDividend = s.tokenReleased[msg.sender];
+        releasedDividend = s.tokenReleased[msg.sender][s.dividendTimes];
     }
 }
