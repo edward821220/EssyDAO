@@ -7,6 +7,7 @@ import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Recei
 contract VaultInit {
     function init() external payable {
         LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
-        ds.supportedInterfaces[type(IERC721Receiver).interfaceId] = true;
+        ds.supportedInterfaces[type(IERC721Receiver).interfaceId] =
+            !ds.supportedInterfaces[type(IERC721Receiver).interfaceId];
     }
 }
