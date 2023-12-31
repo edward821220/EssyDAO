@@ -189,7 +189,7 @@ contract Market is ReentrancyGuard {
 
         sale.soldAmount += tokenAmount_;
 
-        sale.token.transfer(msg.sender, sale.tokenAmount);
+        sale.token.transfer(msg.sender, tokenAmount_);
         (bool success,) = payable(sale.seller).call{value: msg.value}("");
         require(success, "Failed to send ETH to seller");
 
