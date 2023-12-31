@@ -13,6 +13,7 @@ import {DividendFacet} from "../contracts/facets/optional/DividendFacet.sol";
 import {DividendInit} from "../contracts/upgradeInitializers/DividendInit.sol";
 import {VaultFacet} from "../contracts/facets/optional/VaultFacet.sol";
 import {VaultInit} from "../contracts/upgradeInitializers/VaultInit.sol";
+import {Market} from "../contracts/Market.sol";
 
 contract DeployScript is Script {
     function run() public {
@@ -30,6 +31,7 @@ contract DeployScript is Script {
         DividendInit dividendInit = new DividendInit{salt: salt_}();
         VaultFacet vaultFacet = new VaultFacet{salt: salt_}();
         VaultInit vaultInit = new VaultInit{salt: salt_}();
+        Market market = new Market{salt: salt_}();
 
         console2.log("DiamondFactory", address(diamondFactory));
         console2.log("DiamondCutFacet", address(diamondCutFacet));
@@ -42,6 +44,7 @@ contract DeployScript is Script {
         console2.log("DividendInit", address(dividendInit));
         console2.log("VaultFacet", address(vaultFacet));
         console2.log("VaultInit", address(vaultInit));
+        console2.log("Market", address(market));
         vm.stopBroadcast();
     }
 }
