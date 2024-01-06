@@ -17,9 +17,9 @@ import {Market} from "../contracts/Market.sol";
 
 contract DeployScript is Script {
     function run() public {
-        bytes32 salt_ = keccak256(abi.encodePacked(vm.envUint("ADDRESS_LOCAL"), "EasyDAO contracts"));
+        bytes32 salt_ = keccak256(abi.encodePacked(vm.envUint("ADDRESS"), "EasyDAO contracts"));
 
-        vm.startBroadcast(vm.envUint("PRIVATE_KEY_LOCAL"));
+        vm.startBroadcast(vm.envUint("PRIVATE_KEY"));
         DiamondFactory diamondFactory = new DiamondFactory{salt: salt_}();
         DiamondCutFacet diamondCutFacet = new DiamondCutFacet{salt: salt_}();
         DiamondLoupeFacet diamondLoupeFacet = new DiamondLoupeFacet{salt: salt_}();
