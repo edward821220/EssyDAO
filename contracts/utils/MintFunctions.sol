@@ -4,9 +4,9 @@ pragma solidity ^0.8.0;
 import {AppStorage, Snapshots} from "../utils/AppStorage.sol";
 
 contract MintFunctions {
-    event Transfer(address indexed from, address indexed to, uint256 value);
-
     AppStorage internal s;
+
+    event Transfer(address indexed from, address indexed to, uint256 value);
 
     function _mint(address to, uint256 value) internal {
         _updateTotalSupplySnapshot();

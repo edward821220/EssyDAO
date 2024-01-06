@@ -14,6 +14,8 @@ interface IDiamondCut {
         bytes4[] functionSelectors;
     }
 
+    event DiamondCut(FacetCut[] _diamondCut, address _init, bytes _calldata);
+
     /// @notice Add/replace/remove any number of functions and optionally execute
     ///         a function with delegatecall
     /// @param _diamondCut Contains the facet addresses and function selectors
@@ -25,6 +27,4 @@ interface IDiamondCut {
     function diamondCutByProposal(FacetCut[] calldata _diamondCut, address _init, bytes calldata _calldata)
         external
         payable;
-
-    event DiamondCut(FacetCut[] _diamondCut, address _init, bytes _calldata);
 }
