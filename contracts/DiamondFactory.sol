@@ -27,6 +27,8 @@ contract DiamondFactory is Ownable {
         address daoFacet,
         address daoInit
     ) external returns (address) {
+        require(!_containsDuplicate(foundersInfo), "Founders can't be duplicated");
+
         bytes32 salt_ = keccak256(abi.encodePacked(daoName, msg.sender));
 
         Diamond diamond = new Diamond{salt: salt_}(
@@ -59,5 +61,16 @@ contract DiamondFactory is Ownable {
     function withdraw() external onlyOwner {
         (bool success,) = payable(owner()).call{value: address(this).balance}("");
         require(success, "Failed to withdraw");
+    }
+
+    function _containsDuplicate(FounderInfo[] memory foundersInfo) private pure returns (bool) {
+        for (uint256 i = 0; i < foundersInfo.length - 1; i++) {
+            for (uint256 j = i + 1; j < foundersInfo.length; j++) {
+                if (foundersInfo[i].founder == foundersInfo[j].founder) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }
